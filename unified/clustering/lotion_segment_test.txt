@@ -1,0 +1,18 @@
+Shadow lotion grasps (authors' segment ends): 178
+
+distance: Shadow lotion grasp centroid -> F1 category centroids (palm widths; F1 n in brackets)
+  lotion_bottle      0.74  (n=5)
+  cup                1.29  (n=15)
+  jar_can            1.42  (n=11)
+  spray_bottle       1.52  (n=6)
+  box                1.61  (n=10)
+  watering_can_jug   2.31  (n=7)
+  other              2.33  (n=8)
+
+F1-lotion vs random F1 subsets of size 5: observed 0.74, null median 1.54, p(null<=obs) = 0.002
+
+per-feature medians:
+               d_TI  d_TM  d_TR  d_TP  d_IM  d_IR  d_IP  d_MR  d_MP  d_RP
+Shadow lotion  1.77  1.65  1.65  1.82  0.48  0.93  1.46  0.47  1.03  0.57
+F1 lotion      1.18  1.31  1.70  1.86  0.50  1.10  1.33  0.47  0.87  0.47
+F1 all         0.88  0.79  1.05  1.29  0.43  0.84  1.19  0.40  0.80  0.44

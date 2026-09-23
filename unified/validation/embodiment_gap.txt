@@ -1,0 +1,10 @@
+
+                                                inspire_rh56dfx_left  inspire_rh56dfx  inspire_rh56f1  shadow_e  median
+A raw 15D fingertips (current)                                  1.69             5.25            3.19      2.67    2.93
+B 4 fingers only (12D, drop thumb)                              0.34             1.99            3.17      3.40    2.58
+C 10 pairwise tip distances                                     0.30             3.44            1.57      1.68    1.62
+D 4 fingers + 4 thumb->finger dists                             0.30             3.10            2.65      2.78    2.71
+E per-hand URDF-reach normalized 15D                            0.51             1.27            1.48      1.89    1.38
+F fingers 12D + thumb reach-normalized                          1.37             4.54            3.53      3.06    3.30
+G pairwise dists + 5 extension ratios                           0.58             3.82            2.43      2.20    2.31
+H pairwise dists + 4 finger ext (no thumb ext)                  0.30             3.74            1.91      2.19    2.05

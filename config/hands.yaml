@@ -1,0 +1,232 @@
+# Hand kinematic model registry (one entry per physical hand model + side).
+#
+# model_status vocabulary (HANDS.md §3, extended):
+#   exact_official                 model published by manufacturer/official project, matches dataset hardware
+#   dataset_author_model           model shipped by the dataset authors for the exact hardware they recorded with
+#   integrator_official            model published by the robot integrator for this hand on this robot (e.g. Unitree H1)
+#   third_party_candidate          good public model, not from manufacturer / dataset authors; needs visual validation
+#   missing_exact_model            no usable model -> native data only, FK disabled
+#
+# Palm frame (KINEMATICS.md): wrist point = origin of `wrist_frame`; finger bases = origins of `finger_base_joints`
+# (first joint of each finger, fixed on the palm). Fingertip = origin of `tips.<f>.link` (+ offset) or, when a model
+# has no tip frame, the distal-mesh vertex farthest from the distal joint (`mesh_extremal`).
+
+hand_models:
+
+  xhand1_right:
+    family: xhand1
+    side: right
+    urdf: external_hand_models/spider/spider/assets/robots/xhand/xhand_right.urdf
+    model_source: https://github.com/facebookresearch/spider (spider/assets/robots/xhand/xhand_right.urdf)
+    model_status: third_party_candidate
+    palm_link: right_hand_link
+    wrist_frame: right_hand_link
+    finger_base_joints: {index: right_hand_index_bend_joint, middle: right_hand_mid_joint1,
+                         ring: right_hand_ring_joint1, pinky: right_hand_pinky_joint1}
+    tips:
+      thumb: {link: right_hand_thumb_rota_tip}
+      index: {link: right_hand_index_rota_tip}
+      middle: {link: right_hand_mid_tip}
+      ring: {link: right_hand_ring_tip}
+      pinky: {link: right_hand_pinky_tip}
+
+  shadow_e_right_realdex:
+    family: shadow_dexterous_hand_e
+    side: right
+    urdf: external_code/RealDex/data_preprocess/assets/bimanual_srhand_ur.urdf
+    model_source: https://github.com/4DVLab/RealDex (data_preprocess/assets/bimanual_srhand_ur.urdf; Shadow sr_description)
+    model_status: dataset_author_model
+    palm_link: rh_palm
+    wrist_frame: rh_palm
+    finger_base_joints: {index: rh_FFJ4, middle: rh_MFJ4, ring: rh_RFJ4, pinky: rh_LFJ4}  # LFJ4 = pinky knuckle (LFJ5 metacarpal at 0)
+    tips:
+      thumb: {link: rh_thtip}
+      index: {link: rh_fftip}
+      middle: {link: rh_mftip}
+      ring: {link: rh_rftip}
+      pinky: {link: rh_lftip}
+
+  leap_v2_adv_right:
+    family: leap_hand_v2_advanced
+    side: right
+    urdf: external_hand_models/leap_v2_advanced/leap_v2/leap_v2/leap_v2_right/robot.urdf
+    model_source: https://github.com/leap-hand/LEAP_Hand_V2_Adv_API (leap_v2/leap_v2/leap_v2_right/robot.urdf)
+    model_status: exact_official
+    palm_link: no_finger_frame_mirror
+    # URDF root origin is a CAD point 13 cm off the palm; no wrist frame exists. Wrist = centroid of the proximal end
+    # (vertices within 5 mm of max extent along the finger axis) of palm mesh no_finger_frame_mirror.stl, palm-link coords.
+    wrist_point: [-0.0031, 0.0850, -0.1304]
+    # NOTE: index..pinky first joints sit on the articulated 4-finger palm plate (palm_4_finger joint);
+    # landmarks are taken at palm_4_finger = 0, plate articulation then shows up as fingertip motion.
+    finger_base_joints: {index: index_mcpf, middle: middle_mcpf, ring: ring_mcpf, pinky: pinky_mcpf}
+    tips:
+      thumb: {link: realtip_5}
+      index: {link: realtip}
+      middle: {link: realtip_2}
+      ring: {link: realtip_3}
+      pinky: {link: realtip_4}
+
+  inspire_rh56dfx_right_unitree:
+    family: inspire_rh56dfx
+    side: right
+    urdf: external_hand_models/unitree_xr_teleoperate/assets/inspire_hand/inspire_hand_right.urdf
+    model_source: https://github.com/unitreerobotics/xr_teleoperate (assets/inspire_hand; Unitree H1/G1 Inspire DFX)
+    model_status: integrator_official
+    palm_link: R_hand_base_link
+    wrist_frame: R_hand_base_link
+    finger_base_joints: {index: R_index_proximal_joint, middle: R_middle_proximal_joint,
+                         ring: R_ring_proximal_joint, pinky: R_pinky_proximal_joint}
+    tips:
+      thumb: {link: R_thumb_tip}
+      index: {link: R_index_tip}
+      middle: {link: R_middle_tip}
+      ring: {link: R_ring_tip}
+      pinky: {link: R_pinky_tip}
+
+  inspire_rh56dfx_left_unitree:
+    family: inspire_rh56dfx
+    side: left
+    urdf: external_hand_models/unitree_xr_teleoperate/assets/inspire_hand/inspire_hand_left.urdf
+    model_source: https://github.com/unitreerobotics/xr_teleoperate (assets/inspire_hand; Unitree H1/G1 Inspire DFX)
+    model_status: integrator_official
+    palm_link: L_hand_base_link
+    wrist_frame: L_hand_base_link
+    finger_base_joints: {index: L_index_proximal_joint, middle: L_middle_proximal_joint,
+                         ring: L_ring_proximal_joint, pinky: L_pinky_proximal_joint}
+    tips:
+      thumb: {link: L_thumb_tip}
+      index: {link: L_index_tip}
+      middle: {link: L_middle_tip}
+      ring: {link: L_ring_tip}
+      pinky: {link: L_pinky_tip}
+
+  inspire_rh56dftp_right_hrdexdb:
+    family: inspire_rh56dftp
+    side: right
+    urdf: raw_data/hrdexdb/assets/robots/xarm_inspire_DFTP.urdf
+    model_source: https://huggingface.co/datasets/HRDexDB/HRDexDB (assets/robots/xarm_inspire_DFTP.urdf)
+    model_status: dataset_author_model
+    palm_link: base_link
+    wrist_frame: base_link
+    finger_base_joints: {index: right_index_1_joint, middle: right_middle_1_joint,
+                         ring: right_ring_1_joint, pinky: right_little_1_joint}
+    tips:  # URDF has no tip frames -> farthest distal-mesh vertex from the distal joint
+      thumb: {link: right_thumb_4, mesh_extremal: raw_data/hrdexdb/assets/robots/inspire/meshes_right/right_thumb_4.STL}
+      index: {link: right_index_2, mesh_extremal: raw_data/hrdexdb/assets/robots/inspire/meshes_right/right_index_2.STL}
+      middle: {link: right_middle_2, mesh_extremal: raw_data/hrdexdb/assets/robots/inspire/meshes_right/right_middle_2.STL}
+      ring: {link: right_ring_2, mesh_extremal: raw_data/hrdexdb/assets/robots/inspire/meshes_right/right_ring_2.STL}
+      pinky: {link: right_little_2, mesh_extremal: raw_data/hrdexdb/assets/robots/inspire/meshes_right/right_little_2.STL}
+
+  inspire_rh56f1_right_hrdexdb:
+    family: inspire_rh56f1
+    side: right
+    urdf: raw_data/hrdexdb/assets/robots/xarm_inspire_f1_right.urdf
+    model_source: https://huggingface.co/datasets/HRDexDB/HRDexDB (assets/robots/xarm_inspire_f1_right.urdf)
+    model_status: dataset_author_model
+    palm_link: base_link
+    wrist_frame: base_link
+    finger_base_joints: {index: right_index_1_joint, middle: right_middle_1_joint,
+                         ring: right_ring_1_joint, pinky: right_little_1_joint}
+    tips:
+      thumb: {link: thumb_tip}
+      index: {link: index_tip}
+      middle: {link: middle_tip}
+      ring: {link: ring_tip}
+      pinky: {link: little_tip}
+
+  fourier_fdh6_right:
+    family: fourier_fdh6
+    side: right
+    urdf: external_hand_models/fourier_models/Dexterous_hand/fourier_hand_6dof/urdf/fourier_right_hand_6dof.urdf
+    model_source: https://github.com/FFTAI/Wiki-GRx-Models (Dexterous_hand/fourier_hand_6dof)
+    model_status: exact_official
+    palm_link: R_hand_base_link
+    wrist_frame: R_hand_base_link
+    finger_base_joints: {index: R_index_proximal_joint, middle: R_middle_proximal_joint,
+                         ring: R_ring_proximal_joint, pinky: R_pinky_proximal_joint}
+    tips:
+      thumb: {link: R_thumb_tip_link}
+      index: {link: R_index_tip_link}
+      middle: {link: R_middle_tip_link}
+      ring: {link: R_ring_tip_link}
+      pinky: {link: R_pinky_tip_link}
+
+  fourier_fdh6_left:
+    family: fourier_fdh6
+    side: left
+    urdf: external_hand_models/fourier_models/Dexterous_hand/fourier_hand_6dof/urdf/fourier_left_hand_6dof.urdf
+    model_source: https://github.com/FFTAI/Wiki-GRx-Models (Dexterous_hand/fourier_hand_6dof)
+    model_status: exact_official
+    palm_link: L_hand_base_link
+    wrist_frame: L_hand_base_link
+    finger_base_joints: {index: L_index_proximal_joint, middle: L_middle_proximal_joint,
+                         ring: L_ring_proximal_joint, pinky: L_pinky_proximal_joint}
+    tips:
+      thumb: {link: L_thumb_tip_link}
+      index: {link: L_index_tip_link}
+      middle: {link: L_middle_tip_link}
+      ring: {link: L_ring_tip_link}
+      pinky: {link: L_pinky_tip_link}
+
+  brainco_revo2_right:
+    family: brainco_revo2
+    side: right
+    urdf: external_hand_models/brainco_revo2/urdf/revo2_right_hand.urdf
+    model_source: https://github.com/BrainCoTech/revo2_description
+    model_status: exact_official
+    palm_link: right_base_link
+    wrist_frame: right_base_link
+    finger_base_joints: {index: right_index_proximal_joint, middle: right_middle_proximal_joint,
+                         ring: right_ring_proximal_joint, pinky: right_pinky_proximal_joint}
+    tips:
+      thumb: {link: right_thumb_tip_link}
+      index: {link: right_index_tip_link}
+      middle: {link: right_middle_tip_link}
+      ring: {link: right_ring_tip_link}
+      pinky: {link: right_pinky_tip_link}
+
+# Hands present in selected datasets for which no usable kinematic model exists (native import only).
+missing_models:
+  inspire_rh56dfx_gello: {datasets: [robomind_tienkung], status: missing_joint_mapping, reason: "Gello subset stores a single closure value per hand; per-finger state not recorded"}
+  xhand1_left: {datasets: [vitra_teledata], status: no_data, reason: "left arm/hand not present in the released VITRA data"}
+  fourier_fdh12: {datasets: [fourier_actionnet], reason: "no public FDH-12 URDF found; FDH-6 model must not be reused"}
+  fourier_6dof_on_gr2: {datasets: [fourier_actionnet], status: missing_joint_mapping, reason: "6-DoF hand on GR2, variant unconfirmed; same motor-unit problem as FDH-6"}
+  agibot_g1_dexhand: {datasets: [agibot_world], reason: "exact G1 5-finger hand URDF/USD not public (AgiBot-World issue #155)"}
+  fourier_fdh6_motor_units: {datasets: [fourier_actionnet], status: missing_joint_mapping, reason: "model exists (fourier_fdh6_*), but ActionNet stores DexHand SDK motor position params (0..~12), not joint angles; no public motor->joint transmission"}
+
+# Validation log (status: visually_checked | auto_checks_only | unvalidated_assumptions).
+# visually_checked = FK geometry compared against RGB frames of the same timestamp (unified/validation/*.png);
+# it is NOT a metric calibration. Update this block whenever a model or mapping changes.
+validation:
+  xhand1_right:
+    status: visually_checked
+    evidence: "vitra 000130: flexion on tomato grasp matches head-cam frames (small in image). Third-party URDF:
+      exact XHand1 revision unconfirmed. 0.2% samples exceed URDF limits by <0.07 rad."
+  shadow_e_right_realdex:
+    status: visually_checked
+    evidence: "realdex cylinder_1: finger flexion during cylinder grasp matches cam0; URDF shipped by RealDex."
+  inspire_rh56dfx_right_unitree:
+    status: visually_checked
+    evidence: "H1 side assignment verified: ep_000324 fr339 ch0-5 closed = robot right hand holding duster; ep_000243
+      fr189 ch6-11 closed = left hand grasping. Model = Unitree xr_teleoperate Inspire URDF (not vendor-certified BFX/DFX drawing)."
+  inspire_rh56dfx_left_unitree:
+    status: visually_checked
+    evidence: "see inspire_rh56dfx_right_unitree; left URDF thumb differs from mirrored right by ~1 cm at rest."
+  inspire_rh56dftp_right_hrdexdb:
+    status: visually_checked
+    evidence: "spam_can/0 t=15.9s: index extended, middle+ring flexed, little mostly open in cams 22641023/22645021
+      = FK. QA: authors' thumb-rotation conversion reaches 1.40 rad vs URDF limit 1.15 rad (16% samples)."
+  inspire_rh56f1_right_hrdexdb:
+    status: visually_checked
+    evidence: "washing_brush/0 t=9.7s: power grasp, all four fingers flexed in cam 22641023 = FK."
+  leap_v2_adv_right:
+    status: decoding_verified_command_only
+    evidence: "Command decoding verified against the Manus glove targets used by DexWild's own IK (21.5 mm median
+      fingertip residual vs 51.7 mm random). Still COMMANDS (IK solution), never a measured hand pose; contact
+      blocking / tendon slack not observed. thumb_mcp_forward ~constant (-0.03) in sampled episodes. IK was run without
+      joint limits: index_mcpf < 0 (up to -0.19 rad) in 38% of samples; the hardware node clips, so the physical
+      finger sits near 0 there. Not clamped in the store (see limit_violation_frac)."
+
+# RoboMIND Tien Kung Xsens uses the same models (hands = RH56DFX per RoboMIND paper). Mapping-level check:
+#   plug_extract_from 2024-09-12-17-34-03 right hand: frame 169 fist while holding the plug, frame 325 open (camera_top,
+#   low resolution) -> "1 = open" and side order confirmed; recorded in unified/validation/robomind_*.png.

@@ -1,0 +1,10 @@
+# Object categories shared between datasets, for object-matched cross-embodiment grasp comparison.
+# Objects in one category are different physical items of similar shape/size class — NOT identical objects.
+categories:
+  lotion_bottle:   {realdex: [body_lotion], hrdexdb: [lotion]}
+  spray_bottle:    {realdex: [sprayer], hrdexdb: [spray_bottle]}
+  cup:             {realdex: [blue_cup], hrdexdb: [pastel_blue_cup, frog_cup]}
+  watering_can_jug: {realdex: [elephant_watering_can], hrdexdb: [white_wood_handle_watering_can, plastic_elephant_jug]}
+  box:             {realdex: [box], hrdexdb: [box_pink, bamboo_box]}
+  jar_can:         {realdex: [goji_jar], hrdexdb: [coffee_tin, spam_can]}
+  large_cylinder:  {realdex: [cylinder], hrdexdb: []}

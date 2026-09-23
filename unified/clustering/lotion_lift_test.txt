@@ -1,0 +1,22 @@
+/home/daniil/uni_hand_repo/.venv/lib/python3.12/site-packages/numpy/_core/fromnumeric.py:3862: RuntimeWarning: Mean of empty slice
+  return _methods._mean(a, axis=axis, dtype=dtype,
+/home/daniil/uni_hand_repo/.venv/lib/python3.12/site-packages/numpy/_core/_methods.py:142: RuntimeWarning: invalid value encountered in scalar divide
+  ret = ret.dtype.type(ret / rcount)
+body_lotion/body_lotion_1: max lift 4.1 cm, lifted 0% of frames; segments 44: lifted inside segment 0%, in 20 frames after segment end 0%
+body_lotion/body_lotion_2: max lift 3.3 cm, lifted 0% of frames; segments 47: lifted inside segment 0%, in 20 frames after segment end 0%
+body_lotion/body_lotion_3: max lift 4.0 cm, lifted 1% of frames; segments 45: lifted inside segment 1%, in 20 frames after segment end 0%
+body_lotion/body_lotion_4: max lift 4.2 cm, lifted 1% of frames; segments 42: lifted inside segment 2%, in 20 frames after segment end 0%
+Shadow lotion lifted holds: 0
+
+distance from Shadow-lotion (lifted) centroid to F1 category centroids (palm widths):
+category
+box                NaN
+cup                NaN
+jar_can            NaN
+lotion_bottle      NaN
+other              NaN
+spray_bottle       NaN
+watering_can_jug   NaN
+Traceback (most recent call last):
+  File "<stdin>", line 35, in <module>
+TypeError: 'numpy.float64' object is not iterable

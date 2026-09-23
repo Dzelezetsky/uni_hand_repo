@@ -1,0 +1,92 @@
+# Selected source datasets (DATASETS.md) and their status in this repository.
+# hands: every five-finger hand variant present in the dataset subset we use -> hand model id (config/hands.yaml)
+# or null when no usable model exists.
+
+datasets:
+  vitra_teledata:
+    source: https://huggingface.co/datasets/microsoft/VITRA-TeleData
+    access: open
+    full_size: 5.6 GB (2611 episodes)
+    adapter: unidex.adapters.vitra
+    sample: 20 episodes (every 130th id)
+    hands:
+      xhand1/right: xhand1_right
+      xhand1_left: null  # release contains right-arm data only (meta/has_left = false)
+
+  realdex:
+    source: https://github.com/4DVLab/RealDex (Google Drive, per-object zip)
+    access: open (Google Drive quota)
+    full_size: 52 objects x ~9 GB zip (~450 GB)
+    adapter: unidex.adapters.realdex
+    sample: 1 object (cylinder) = 2 sequences x ~1800 frames
+    hands:
+      shadow_dexterous_hand_e/right: shadow_e_right_realdex
+
+  humanoid_everyday_h1:
+    source: https://huggingface.co/datasets/USC-PSI-Lab/Humanoid-Everyday-H1
+    access: open
+    full_size: 4885 episodes (LeRobot v2.1, egocentric RGB 640x480)
+    adapter: unidex.adapters.humanoid_everyday
+    sample: 20 episodes, 20 distinct tasks
+    hands:
+      inspire_rh56dfx/right: inspire_rh56dfx_right_unitree
+      inspire_rh56dfx/left: inspire_rh56dfx_left_unitree
+
+  hrdexdb:
+    source: https://huggingface.co/datasets/HRDexDB/HRDexDB
+    access: open
+    full_size: 1.5 TB (inspire_dftp 618 + inspire_f1 592 episodes; allegro/human/gripper excluded)
+    adapter: unidex.adapters.hrdexdb
+    sample: 10 inspire_dftp + 10 inspire_f1 episodes (10 distinct objects each), 4 of ~24 cameras downloaded
+    hands:
+      inspire_rh56dftp/right: inspire_rh56dftp_right_hrdexdb
+      inspire_rh56f1/right: inspire_rh56f1_right_hrdexdb
+
+  dexwild_robot:
+    source: https://huggingface.co/datasets/boardd/dexwild-dataset (*_data/robot)
+    access: open
+    full_size: ~390 GB robot tars (5 tasks, 1388 robot episodes)
+    adapter: unidex.adapters.dexwild
+    sample: pour task, first 15 of 111 robot episodes (low-dim), wrist-cam frames for 2 episodes
+    hands:
+      leap_hand_v2_advanced/right: leap_v2_adv_right
+
+  fourier_actionnet:
+    source: https://huggingface.co/datasets/FourierIntelligence/ActionNet
+    access: gated (granted 2026-09-23)
+    full_size: 322 uncompressed tars, 4-7 GB each (~1.6 TB), 30k episodes
+    adapter: unidex.adapters.actionnet
+    sample: 2 episodes from each of 6 GR1 tars, 6 GR2/24D tars, 3 from each GR2/12D tar (hdf5 + top rgb + timestamps)
+    # NOTE 2026-09-23: hands of this dataset are NOT processed for now (motor units, no official transmission;
+    # candidate linear mapping rejected as too risky). Native data only.
+    hands:
+      fourier_fdh6 (GR1, 312 tars): null          # missing_joint_mapping: motor units, see missing_models
+      fourier_fdh12 (GR2, 8 tars): null           # missing_exact_model
+      fourier_6dof_on_gr2 (2 tars): null          # missing_joint_mapping
+
+  robomind_tienkung:
+    source: https://huggingface.co/datasets/x-humanoid-robomind/RoboMIND
+    access: gated (granted 2026-09-23)
+    full_size: xsens 864 GB + gello ~2 TB (split tar.gz parts)
+    adapter: unidex.adapters.robomind
+    sample: xsens 4 tasks x 4 episodes (streamed gzip prefix), gello 5 episodes
+    hands:
+      inspire_rh56dfx/left (xsens): inspire_rh56dfx_left_unitree
+      inspire_rh56dfx/right (xsens): inspire_rh56dfx_right_unitree
+      inspire_rh56dfx_gello: null                 # missing_joint_mapping (1D closure)
+
+  agibot_world_dexhand:
+    source: https://huggingface.co/datasets/agibot-world/AgiBotWorld-Alpha and -Beta
+    access: gated (granted 2026-09-23)
+    full_size: Alpha 8.7 TB / Beta 41.6 TB; dex-hand tasks found by probing proprio tars (raw_data/agibot/effector_probe.csv)
+    adapter: unidex.adapters.agibot
+    sample: task 475 (Ironing Clothes) proprio x12, videos x3 (+ other Beta dex tasks, see sample list)
+    hands:
+      agibot_g1_dexhand: null                     # missing_exact_model
+
+  robotacdex:
+    source: https://roboskin.ai/research/robotacdex-humanoid-visual-tactile-action-dataset-2026
+    access: not public
+    adapter: null
+    hands:
+      brainco_revo2/right: brainco_revo2_right # model ready, dataset unavailable

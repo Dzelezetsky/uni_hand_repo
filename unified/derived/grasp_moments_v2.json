@@ -1,0 +1,6 @@
+{
+ "version": "grasp_moments_v2",
+ "lift_threshold_m": 0.03,
+ "seg_end_frames": 6,
+ "doc": "Derived layer grasp_moments_v1: which hand samples are in hand-object interaction, from MEASURED/annotated\nsignals only (never from hand posture). Output: unified/derived/grasp_moments_v1.parquet\n\n  hrdexdb (inspire_f1)  object_lifted: tracked object (object_6d_pose_v2, per video frame) is > LIFT_M above its\n                        initial height in the robot base frame (inv(C2R) @ pose, z up). An object off the table must\n                        be held. Sanity: failed grasps never exceed 0.2 cm, successful ones reach 6-19 cm.\n  realdex               contact: dataset annotation contact.txt (authors: hand mesh within 1 mm of the tracked object)\n  humanoid_everyday_h1  none: no contact / object signal in the H1 release -> not included\n"
+}

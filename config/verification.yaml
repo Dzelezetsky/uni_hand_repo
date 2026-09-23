@@ -1,0 +1,63 @@
+# Strict gate for canonical hand geometry (user decision 2026-09-23):
+# only 100% verified (dataset, hand) combinations get model_q / fingertips in the unified store.
+# Everything else keeps ONLY native data (canonicalization_status = excluded_not_verified) — approximately
+# right geometry is not stored, because it would contaminate later clustering / supervision.
+#
+# A mapping is `verified` only if ALL hold:
+#   V1 model    exact model of this hardware from manufacturer, dataset authors or robot integrator
+#   V2 mapping  raw -> joint conversion taken from official dataset / integrator code or docs, no own assumptions
+#   V3 state    measured (joint or actuator); not command, not unknown
+#   V4 visual   FK geometry matches RGB at the same timestamp (unified/validation/)
+#   V5 limits   < 1% of samples outside URDF joint limits (> 0.05 rad)
+#   V6 time     per-sample timestamps available
+
+criteria: [V1_model, V2_mapping, V3_measured_state, V4_visual_check, V5_joint_limits, V6_timestamps]
+
+mappings:
+  realdex__shadow_e_right:
+    status: verified
+    checks: {V1: pass, V2: pass, V3: pass, V4: pass, V5: pass, V6: pass}
+  humanoid_everyday_h1__inspire_rh56dfx_right:
+    status: verified
+    checks: {V1: pass, V2: pass, V3: pass, V4: pass, V5: pass, V6: pass}
+    note: "Unitree (robot integrator) URDF + Unitree normalization; H1 hand = RH56DFX per Unitree DFX_inspire_service"
+  humanoid_everyday_h1__inspire_rh56dfx_left:
+    status: verified
+    checks: {V1: pass, V2: pass, V3: pass, V4: pass, V5: pass, V6: pass}
+  hrdexdb__inspire_rh56f1_right:
+    status: verified
+    checks: {V1: pass, V2: pass, V3: pass, V4: pass, V5: pass, V6: pass}
+
+  hrdexdb__inspire_rh56dftp_right:
+    status: excluded
+    checks: {V1: pass, V2: pass, V3: pass, V4: pass, V5: FAIL, V6: pass}
+    reason: "authors' thumb-rotation conversion reaches 1.40 rad but their URDF limit is 1.15 rad (16% of samples):
+      conversion and model are inconsistent, the thumb-yaw scale of every frame is in doubt. Re-include once resolved
+      (e.g. confirmation from the HRDexDB authors)."
+  vitra_teledata__xhand1_right:
+    status: excluded
+    checks: {V1: FAIL, V2: pass, V3: pass, V4: pass, V5: pass, V6: pass}
+    reason: "URDF is third-party (facebookresearch/spider); no official RobotEra XHand1 model found. Re-include with an
+      official model."
+  dexwild_robot__leap_v2_adv_right:
+    status: excluded
+    checks: {V1: pass, V2: pass, V3: FAIL, V4: pass, V5: FAIL, V6: pass}
+    reason: "only commanded joint targets (IK solution of glove retargeting) are stored; IK ran without joint limits."
+  robomind_xsens__inspire_rh56dfx_right:
+    status: excluded
+    checks: {V1: pass, V2: FAIL, V3: FAIL, V4: pass, V5: pass, V6: FAIL}
+    reason: "Unitree normalization applied to RoboMIND data is our assumption (not RoboMIND code); puppet == master
+      bit-identical (state source unknown); no timestamps / recording rate."
+  robomind_xsens__inspire_rh56dfx_left:
+    status: excluded
+    checks: {V1: pass, V2: FAIL, V3: FAIL, V4: pass, V5: pass, V6: FAIL}
+    reason: "see robomind_xsens__inspire_rh56dfx_right"
+
+# Hands that are not processed at all for now (native import only), with the decision.
+not_processed:
+  fourier_actionnet/fourier_fdh6: "NOT PROCESSED (decision 2026-09-23): data are DexHand motor position params (0..~12);
+    no official motor->joint transmission. A candidate linear mapping was rejected as too risky."
+  fourier_actionnet/fourier_6dof_on_gr2: "NOT PROCESSED: same motor-unit problem, hand variant unconfirmed."
+  fourier_actionnet/fourier_fdh12: "NOT PROCESSED: no public FDH-12 model."
+  agibot_world_dexhand/agibot_g1_dexhand: "NOT PROCESSED: no public hand model."
+  robomind_tienkung/inspire_rh56dfx_gello: "NOT PROCESSED: 1D closure only."

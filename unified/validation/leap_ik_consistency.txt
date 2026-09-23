@@ -1,0 +1,7 @@
+DexWild pour (15 eps): glove IK targets vs FK(decoded LEAP command), one rigid fit per episode
+residual error mm, median per point [thumb tip, thumb dip, index tip, index dip, ..., pinky dip]
+  IK-exact: mcpf-0.2, palm as is     overall= 21.5  tips=[34.4 25.9 23.7 22.4 21.4]
+  as-commanded (current mapping)     overall= 25.1  tips=[39.9 30.9 27.9 24.9 22.9]
+  MCP-side sign flipped              overall= 27.7  tips=[61.7 46.2 31.4 27.6 41.4]
+  thumb side<->fwd swapped           overall= 30.8  tips=[83.4 34.1 29.  29.6 28.6]
+  random joints (null model)         overall= 51.7  tips=[43.7 76.9 99.9 94.7 80.1]

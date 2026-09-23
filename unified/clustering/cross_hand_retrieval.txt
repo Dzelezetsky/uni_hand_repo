@@ -1,0 +1,14 @@
+<stdin>:17: Pandas4Warning: Starting with pandas version 4.0 all arguments of sum will be keyword-only.
+all 10 distances           f1    ->shadow n= 30  same-category NN = 0.10  chance = 0.24  p = 0.982
+all 10 distances           shadow->f1     n=275  same-category NN = 0.32  chance = 0.24  p = 0.205
+4 thumb distances          f1    ->shadow n= 30  same-category NN = 0.20  chance = 0.24  p = 0.732
+4 thumb distances          shadow->f1     n=275  same-category NN = 0.27  chance = 0.24  p = 0.357
+6 finger-finger distances  f1    ->shadow n= 30  same-category NN = 0.40  chance = 0.24  p = 0.022
+6 finger-finger distances  shadow->f1     n=275  same-category NN = 0.24  chance = 0.24  p = 0.424
+hand          category     
+inspire_rh56  box               10
+              cup               15
+              lotion_bottle      5
+shadow_e_rig  box               68
+              cup               28
+              lotion_bottle    179
