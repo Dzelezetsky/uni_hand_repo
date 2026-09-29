@@ -27,6 +27,11 @@ def mapping_verification(mapping_id: str) -> dict:
     return verification()["mappings"].get(mapping_id, {"status": "unreviewed", "reason": "not in config/verification.yaml"})
 
 
+def pad_normal_verification(hand_model_id: str) -> dict:
+    """Model-level check of the pad-normal definition for one hand model (config/verification.yaml: pad_normals)."""
+    return verification().get("pad_normals", {}).get(hand_model_id, {"status": "unreviewed"})
+
+
 @functools.lru_cache
 def load_hand(hand_model_id: str) -> CanonicalHand:
     spec = registry()["hand_models"][hand_model_id]

@@ -164,6 +164,34 @@ If the FK library directly returns target links relative to the palm link, prefe
 
 ---
 
+## 5b. Fingertip pad normals (v0.1, extension of the 15D geometry)
+
+Motivation (2026-09-29, Feix et al. 2016 GRASP taxonomy): tip positions cannot tell pad vs side opposition or thumb
+abduction/adduction; the orientation of the finger pads can. Stored in addition to, never instead of, the fingertips.
+
+Definition (`PAD_NORMAL_VERSION = pad_normals_v0.1+distal_flexion`, `CanonicalHand.pad_normal_specs`):
+
+\[
+n = \operatorname{sign}\cdot\frac{a \times r}{\|a \times r\|}
+\]
+
+- `a` = axis of the LAST revolute joint in the tip chain (distal flexion joint, may be a URDF mimic);
+- `r` = vector from that joint to the fingertip point (same tip point as the fingertips, §2–3), in the joint's child frame;
+- `sign` = direction of the larger joint-limit magnitude (the flexion working range; Fourier fingers flex negative).
+
+So `n` is the direction in which the fingertip moves when the finger curls, i.e. the pad side at the tip. It is a
+constant vector in the tip link frame, rotated by FK, expressed in the canonical palm frame (left hands reflected,
+§6). Everything comes from the hand's own URDF; no per-hand constants.
+
+Stored as `pad_normals_palm` (5×3 unit vectors, finger order as §2) only when the hand model passes the
+`pad_normals` block of `config/verification.yaml` (P1 automatic: four fingers palmar at rest; P2/P3 manual renders
+from `scripts/analysis/check_pad_normals.py` and `unidex.viz.panel(..., pad_normals=True)`).
+
+Limits: the normal is the flexion direction at the tip point, not the mesh surface normal at the pad centre (they
+differ where the distal phalanx is curved); the thumb normal follows the thumb's distal (IP-like) joint.
+
+---
+
 ## 6. Left hand
 
 Left/right should not create duplicated grasp classes.

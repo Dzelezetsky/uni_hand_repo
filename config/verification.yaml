@@ -61,3 +61,16 @@ not_processed:
   fourier_actionnet/fourier_fdh12: "NOT PROCESSED: no public FDH-12 model."
   agibot_world_dexhand/agibot_g1_dexhand: "NOT PROCESSED: no public hand model."
   robomind_tienkung/inspire_rh56dfx_gello: "NOT PROCESSED: 1D closure only."
+
+# Fingertip pad normals (PAD_NORMAL_VERSION, KINEMATICS.md §5b) — a MODEL-level definition, checked per hand model.
+# Stored as pad_normals_palm only if BOTH the (dataset, hand) mapping above is verified AND the hand model is verified
+# here. Checks:
+#   P1 rule     index..pinky normals palmar (+Z > 0.5) at rest — automatic (scripts/analysis/check_pad_normals.py)
+#   P2 model    in unified/validation/pad_normals/<hand>.png every arrow leaves the finger PAD (manual, by the user)
+#   P3 rgb      arrows consistent with the grasp in unified/validation/pad_normals/rgb__*.png (manual)
+# P1 auto-passed for all registry models; P2/P3 approved by the user on 2026-09-29 for the four models below.
+pad_normals:
+  shadow_e_right_realdex:        {status: verified, checks: {P1: pass, P2: pass, P3: pass}}
+  inspire_rh56dfx_right_unitree: {status: verified, checks: {P1: pass, P2: pass, P3: pass}}
+  inspire_rh56dfx_left_unitree:  {status: verified, checks: {P1: pass, P2: pass, P3: pass}}
+  inspire_rh56f1_right_hrdexdb:  {status: verified, checks: {P1: pass, P2: pass, P3: pass}}

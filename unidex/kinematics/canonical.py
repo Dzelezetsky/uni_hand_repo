@@ -28,6 +28,7 @@ from .fk import HandFK
 
 FINGERS = ("thumb", "index", "middle", "ring", "pinky")
 CANONICAL_VERSION = "fingertips_palm_v0.1+knuckle_origin"
+PAD_NORMAL_VERSION = "pad_normals_v0.1+distal_flexion"
 
 
 @dataclass
@@ -59,6 +60,16 @@ def to_canonical(points_root: np.ndarray, frame: PalmFrame, side: str) -> np.nda
     elif side != "right":
         raise ValueError(side)
     return p
+
+
+def to_canonical_dir(vec_root: np.ndarray, frame: PalmFrame, side: str) -> np.ndarray:
+    """Direction vectors (..., 3) in FK root frame -> canonical right-hand convention (no translation)."""
+    v = vec_root @ frame.R
+    if side == "left":
+        v = v * np.array([1.0, 1.0, -1.0])
+    elif side != "right":
+        raise ValueError(side)
+    return v
 
 
 def _tip_offset(spec: dict) -> np.ndarray:
@@ -97,6 +108,45 @@ class CanonicalHand:
             P = poses[link]
             out.append(P[:, :3, 3] + np.einsum("tij,j->ti", P[:, :3, :3], off))
         return np.stack(out, axis=1)
+
+    def pad_normal_specs(self) -> list[dict]:
+        """Per finger: pad normal as a constant unit vector in the tip link frame (PAD_NORMAL_VERSION).
+
+        Definition: the direction in which the fingertip point moves when the finger's LAST revolute joint (distal
+        flexion joint, possibly a URDF mimic) flexes, i.e. sign * (a x r) with a = joint axis, r = joint -> tip point,
+        both in the joint's child frame. Flexion sign = direction of the larger joint-limit magnitude (the finger's
+        working range). Everything comes from the hand's own URDF; no per-hand constants.
+        """
+        out = []
+        for f, tip, off in zip(FINGERS, self.tip_links, self.tip_offsets):
+            chain = self.fk.chain(tip)
+            k = max(i for i, j in enumerate(chain) if j.type in ("revolute", "continuous"))
+            j = chain[k]
+            T = np.eye(4)  # tip link frame expressed in the distal joint's child frame (fixed joints only)
+            for jj in chain[k + 1:]:
+                T = T @ jj.origin
+            r = T[:3, :3] @ off + T[:3, 3]
+            a = j.axis / np.linalg.norm(j.axis)
+            lo, hi = j.lower, j.upper
+            if lo is None or hi is None:
+                raise ValueError(f"{j.name}: no joint limits, flexion sign undefined")
+            sign = 1.0 if abs(hi) >= abs(lo) else -1.0
+            v = sign * np.cross(a, r)
+            if np.linalg.norm(v) < 1e-6:
+                raise ValueError(f"{f}: tip lies on the distal joint axis")
+            n_tip = T[:3, :3].T @ (v / np.linalg.norm(v))  # express in tip link frame
+            out.append(dict(finger=f, joint=j.name, sign=sign, lower=lo, upper=hi, n_tip_link=n_tip))
+        return out
+
+    def pad_normals_root(self, q: np.ndarray, joint_names: list[str]) -> np.ndarray:
+        """(T, 5, 3) unit pad normals in the palm-link (FK root) frame."""
+        poses = self.fk.link_poses(q, joint_names, self.tip_links)
+        return np.stack([np.einsum("tij,j->ti", poses[l][:, :3, :3], s["n_tip_link"])
+                         for l, s in zip(self.tip_links, self.pad_normal_specs())], axis=1)
+
+    def canonical_pad_normals(self, q: np.ndarray, joint_names: list[str]) -> np.ndarray:
+        """(T, 5, 3) unit pad normals in the canonical palm frame (right-hand convention)."""
+        return to_canonical_dir(self.pad_normals_root(q, joint_names), self.frame, self.side)
 
     def canonical(self, q: np.ndarray, joint_names: list[str]) -> tuple[np.ndarray, np.ndarray]:
         """Returns (fingertips_palm_m (T,5,3), fingertips_palm_norm (T,5,3))."""

@@ -7,6 +7,7 @@ unified/
   hand_models.parquet       registry snapshot (model status/source/urdf hash, palm frame, scale)
   episodes/<dataset>/<episode>/
       hand_<side>.parquet         t_s, native_q, model_q, fingertips_palm_m[15], fingertips_palm_norm[15], valid
+                                  (+ pad_normals_palm[15] unit vectors, only if the hand's pad normals are verified)
       hand_<side>_action.parquet  t_s, native_action (if the dataset has separate commands)
       camera_frames.parquet       camera_id, frame_index, t_s (only where per-frame times are known)
       stream_<name>.parquet       t_s, data (+ names/units in parquet metadata)
@@ -27,8 +28,8 @@ import pyarrow as pa
 import pyarrow.parquet as pq
 
 from . import schema as S
-from .hands import REPO, load_hand, mapping_verification, registry
-from .kinematics.canonical import CANONICAL_VERSION, FINGERS
+from .hands import REPO, load_hand, mapping_verification, pad_normal_verification, registry
+from .kinematics.canonical import CANONICAL_VERSION, FINGERS, PAD_NORMAL_VERSION
 from .mappings import MAPPINGS
 
 OUT = REPO / "unified"
@@ -80,6 +81,7 @@ def canonicalize(h: S.HandStream) -> tuple[dict, pd.DataFrame]:
         status = S.CANON_EXCLUDED
     frame = pd.DataFrame({"frame_index": np.arange(len(h.t)), "t_s": h.t.astype(float),
                           "native_q": list(np.asarray(h.native_q, float))})
+    pad_status = pad_normal_verification(h.hand_model_id)["status"] if spec else None
     qa = dict(limit_violation_frac=None, max_limit_violation_rad=None, nan_frac=float(np.isnan(h.native_q).mean()))
     if status == S.CANON_OK:
         hand = load_hand(h.hand_model_id)
@@ -96,6 +98,9 @@ def canonicalize(h: S.HandStream) -> tuple[dict, pd.DataFrame]:
         frame["fingertips_palm_m"] = list(m.reshape(len(m), 15).astype(np.float32))
         frame["fingertips_palm_norm"] = list(n.reshape(len(n), 15).astype(np.float32))
         frame["valid"] = valid
+        if pad_status == "verified":
+            pn = hand.canonical_pad_normals(mq, names)
+            frame["pad_normals_palm"] = list(pn.reshape(len(pn), 15).astype(np.float32))
     prov = dict(
         side=h.side, hand_family=h.hand_family, hand_model_id=h.hand_model_id,
         hand_model_status=spec["model_status"] if spec else None,
@@ -109,6 +114,8 @@ def canonicalize(h: S.HandStream) -> tuple[dict, pd.DataFrame]:
         native_units=h.native_units, native_dim=int(h.native_q.shape[1]), native_names=list(h.native_names),
         model_joint_names=list(mapping.model_joints) if status == S.CANON_OK else None,
         canonicalization_status=status, canonical_version=CANONICAL_VERSION if status == S.CANON_OK else None,
+        pad_normal_status=pad_status if status == S.CANON_OK else None,
+        pad_normal_version=PAD_NORMAL_VERSION if status == S.CANON_OK and pad_status == "verified" else None,
         validation_status=_validation_status(h.hand_model_id)[0] if spec else None,
         verification_status=ver["status"] if ver else None,
         verification_reason=(ver.get("reason") or ver.get("note")) if ver else None,

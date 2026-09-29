@@ -1,0 +1,48 @@
+Reachability of verified hands (native-space sampling through verified mappings)
+
+Shadow realdex__shadow_e_right: kept 200000 samples (dropped outside URDF limits 0.0%); range: URDF joint limits (identity mapping). Shadow J1/J2 are one tendon, but the split between them is free under contact (underactuated), so independent sampling within limits is physically possible.
+DFX-R  humanoid_everyday_h1__inspire_rh56dfx_right: kept 200000 samples (dropped outside URDF limits 0.0%); range: Unitree normalization 0..1 (xr_teleoperate robot_hand_inspire.py)
+DFX-L  humanoid_everyday_h1__inspire_rh56dfx_left: kept 200000 samples (dropped outside URDF limits 0.0%); range: Unitree normalization 0..1 (xr_teleoperate robot_hand_inspire.py)
+F1     hrdexdb__inspire_rh56f1_right: kept 200000 samples (dropped outside URDF limits 0.0%); range: data-observed p0.5..p99.5 per channel over the unified store (no official F1 range at hand): reach AS USED in HRDexDB, may underestimate the hardware range
+
+Reach of pairwise fingertip distances, palm widths [p1, p99]:
+pair           Shadow          DFX-R          DFX-L             F1
+T-I      [0.25,2.47]   [0.25,1.97]   [0.27,1.96]   [0.15,1.75]
+T-M      [0.35,2.69]   [0.42,2.20]   [0.49,2.21]   [0.18,1.82]
+T-R      [0.54,2.86]   [0.67,2.43]   [0.74,2.45]   [0.40,1.95]
+T-P      [0.53,2.77]   [0.94,2.65]   [0.99,2.68]   [0.72,2.13]
+I-M      [0.23,1.96]   [0.33,2.09]   [0.33,2.09]   [0.34,1.77]
+I-R      [0.44,2.06]   [0.61,2.10]   [0.61,2.10]   [0.67,2.06]
+I-P      [0.38,2.28]   [0.92,2.12]   [0.92,2.12]   [1.00,2.11]
+M-R      [0.23,1.96]   [0.31,2.10]   [0.31,2.10]   [0.34,2.00]
+M-P      [0.21,2.27]   [0.63,2.05]   [0.63,2.05]   [0.67,1.99]
+R-P      [0.16,2.19]   [0.33,1.89]   [0.33,1.89]   [0.33,1.87]
+
+Pinch configurations (thumb-finger distance < 0.35 pw): share of reachable samples and angle(thumb pad normal, finger pad normal) p5/p50/p95 deg (180 = pads face each other)
+  thumb-index  Shadow share  2.54%  min d 0.01  angle   21/  50/  98  max  149
+  thumb-index  DFX-R  share  2.74%  min d 0.03  angle   17/  46/  74  max   82
+  thumb-index  DFX-L  share  2.19%  min d 0.02  angle   18/  46/  74  max   82
+  thumb-index  F1     share 12.25%  min d 0.01  angle   71/  90/ 107  max  113
+  thumb-middle Shadow share  1.02%  min d 0.02  angle   13/  38/  89  max  138
+  thumb-middle DFX-R  share  0.42%  min d 0.18  angle   34/  54/  74  max   83
+  thumb-middle DFX-L  share  0.09%  min d 0.28  angle   36/  54/  69  max   74
+  thumb-middle F1     share  6.43%  min d 0.01  angle   76/  94/ 111  max  116
+
+Cross-hand coverage (exact native-space fit, reproduced = RMS < 0.05 pw):
+row = hand whose REAL frames are tested, column = hand that must reproduce them
+          Shadow   DFX-R   DFX-L      F1
+Shadow      1.00    0.74    0.74    0.46   (n=1500)
+DFX-R       1.00    1.00    1.00    0.53   (n=1192)
+DFX-L       1.00    1.00    1.00    0.38   (n=212)
+F1          1.00    0.98    0.95    1.00   (n=1500)
+
+Where misses come from: mean |residual| per pairwise distance over NOT reproduced frames (pw)
+A -> B             T-I   T-M   T-R   T-P   I-M   I-R   I-P   M-R   M-P   R-P
+Shadow -> DFX-R   0.04  0.05  0.07  0.10  0.03  0.05  0.06  0.03  0.09  0.09   median rms 0.031
+F1 -> DFX-R       0.07  0.04  0.07  0.13  0.04  0.04  0.02  0.02  0.02  0.02   median rms 0.011
+Shadow -> DFX-L   0.05  0.05  0.06  0.12  0.03  0.05  0.06  0.03  0.09  0.08   median rms 0.032
+DFX-R -> DFX-L    0.02  0.01  0.00  0.00  0.02  0.07  0.17  0.02  0.00  0.03   median rms 0.000
+F1 -> DFX-L       0.07  0.07  0.12  0.13  0.05  0.04  0.04  0.02  0.02  0.02   median rms 0.012
+Shadow -> F1      0.12  0.07  0.06  0.08  0.06  0.07  0.09  0.03  0.08  0.07   median rms 0.053
+DFX-R -> F1       0.34  0.30  0.23  0.16  0.03  0.04  0.04  0.01  0.01  0.01   median rms 0.039
+DFX-L -> F1       0.22  0.31  0.34  0.36  0.04  0.05  0.04  0.01  0.03  0.02   median rms 0.148

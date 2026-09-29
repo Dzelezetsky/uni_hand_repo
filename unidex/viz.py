@@ -69,7 +69,8 @@ def _nearest(t_arr, t):
     return int(np.nanargmin(np.abs(t_arr - t)))
 
 
-def panel(dataset_id, episode_key, side="right", n=4, camera_id=None, out=None, times=None):
+def panel(dataset_id, episode_key, side="right", n=4, camera_id=None, out=None, times=None, pad_normals=False):
+    """pad_normals=True: also draw fingertip pad normals (20 mm red arrows) in both skeleton views."""
     hs = pd.read_parquet(UNI / "hand_streams.parquet")
     row = hs[(hs.dataset_id == dataset_id) & (hs.source_episode_id == episode_key) & (hs.side == side)].iloc[0]
     frame = pd.read_parquet(UNI / row.path)
@@ -89,6 +90,7 @@ def panel(dataset_id, episode_key, side="right", n=4, camera_id=None, out=None, 
         idx = [_nearest(frame.t_s.to_numpy(), t) for t in times]
     q = np.stack(frame.model_q.to_numpy())[idx]
     sk = skeleton(hand, q, names)
+    nrm = hand.canonical_pad_normals(q, names) if pad_normals else None
     fig, axes = plt.subplots(3, len(idx), figsize=(4 * len(idx), 11))
     axes = np.atleast_2d(axes).reshape(3, len(idx))
     for k, i in enumerate(idx):
@@ -111,6 +113,10 @@ def panel(dataset_id, episode_key, side="right", n=4, camera_id=None, out=None, 
             for f in FINGERS:
                 p = sk[f][k] * 1000
                 ax.plot(p[:, a], p[:, b], "-o", color=COLORS[f], ms=3, lw=2, label=f)
+                if nrm is not None:
+                    d = nrm[k, FINGERS.index(f)] * 20
+                    ax.annotate("", xy=(p[-1, a] + d[a], p[-1, b] + d[b]), xytext=(p[-1, a], p[-1, b]),
+                                arrowprops=dict(arrowstyle="-|>", color="red", lw=1.5))
             lm = hand.frame.landmarks
             base = to_canonical(np.stack([lm[f"base_{f}"] for f in ("index", "middle", "ring", "pinky")]),
                                 hand.frame, hand.side) * 1000

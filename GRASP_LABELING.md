@@ -108,3 +108,63 @@ FUTURE class label is known (per-class ridge from current posture). k = 1 = pres
   F1/Shadow lands in "wide wrap" (thumb embodiment gap) and H1 contains free-space gestures absent elsewhere.
 - Candidate: `hand_posture_class_v1` = KMeans k=5 on pairwise distances, hand-balanced. Not final: small data,
   embodiment-split "open" class; re-fit after scaling the verified set.
+
+## Decision 2026-09-29: vocabulary inputs = hand proprioception only; no pad/side attribute
+
+Context: Feix et al. 2016 (GRASP taxonomy) describes grasps by power/intermediate/precision, opposition type
+(pad/palm/side), virtual fingers and thumb abduction/adduction. Pad normals were added to the canonical geometry for
+this (KINEMATICS.md §5b).
+
+### Rule A — no contact / object information as clustering input
+
+Features of the shared posture vocabulary (`hand_posture_class_*`) must be computable from verified hand
+proprioception alone. Object pose/mesh, contact labels and tactile are NOT inputs: each would restrict the corpus to
+the few datasets that have them. Consequence (accepted): the vocabulary describes HAND SHAPE, not functional grasp
+(fist in free space = palm-opposition grasp; preshape = grasp) — the posture/grasp split of CLAUDE.md §16. Datasets
+with object or contact signals may be used only as an EVALUATION layer (do posture classes match real grasps?), never
+to define classes or features.
+
+### Rule B — no pad-vs-side opposition attribute in the shared vocabulary
+
+Low-DoF hands (Inspire: 1 coupled DoF per finger, 2 thumb DoF, no finger abduction) meet the thumb on a fixed curve;
+which side of the thumb touches the finger is set by the mechanism, not by the operator. Measured
+(`scripts/analysis/reachability.py`, `unified/validation/reachability/report.txt`): angle between thumb and index pad
+normals in reachable pinch configurations (tip distance < 0.35 palm widths):
+
+| hand | p5 / p50 / p95 | max |
+|---|---|---|
+| Shadow | 21 / 50 / 98° | 149° |
+| Inspire DFX | 17 / 46 / 74° | 82° |
+| Inspire F1 | 71 / 90 / 107° | 113° |
+
+The intervals are hand-specific, so a pad/side attribute would encode the embodiment. In addition, with the tip-point
+normal the contact surface is not observed (pinch contact is not at the tip point). Pad normals stay stored (physically
+correct; per-hand continuous targets, analysis) but are not an axis of the shared vocabulary. Re-open only if a
+normal-based feature passes both checks of Rule C.
+
+### Rule C — admission test for any new vocabulary feature
+
+1. Mixing ratio across hands ≈ 1 (as for pairwise distances, 1.21), `scripts/analysis/embodiment_gap.py`.
+2. Reachability: each hand's REAL postures must be reproducible by the other hands in that feature
+   (`unidex/reachability.py`: native-space sampling through the verified mapping + box-constrained least-squares fit;
+   sampling URDF joints independently is wrong for coupled hands). Values/classes reachable by only some hands go to
+   the per-embodiment feasibility mask (rule 5 above), not into a shared class.
+
+### Result 2026-09-29: cross-hand reachability of real postures (10 pairwise distances)
+
+Fraction of hand A's real frames (rows) that hand B (columns) reproduces within 0.05 palm widths RMS (~4 mm):
+
+|  | Shadow | DFX-R | DFX-L | F1 |
+|---|---|---|---|---|
+| Shadow | 1.00 | 0.74 | 0.74 | 0.46 |
+| DFX-R | 1.00 | 1.00 | 1.00 | 0.53 |
+| DFX-L | 1.00 | 1.00 | 1.00 | 0.38 |
+| F1 | 1.00 | 0.98 | 0.95 | 1.00 |
+
+- Shadow reproduces every observed posture of the Inspire hands; F1 postures are reproducible by all hands.
+- Inspire DFX misses 26% of Shadow postures, mostly ring/pinky relations (T-P, M-P, R-P): no finger abduction.
+- F1 misses about half of the other hands' postures, almost entirely in the thumb distances. CAVEAT: the F1 native
+  range is the range OBSERVED in HRDexDB (p0.5..p99.5; e.g. thumb rotation uses 630..1233 of the raw scale), not the
+  hardware range, so this is "not used in HRDexDB", not proven "infeasible". Needs an official F1 range.
+- => the feasibility mask is real and asymmetric: a class learned mainly from Shadow/H1 data may be unreachable for
+  F1 (thumb) and DFX (spread fingers). Evaluate every candidate class against this mask.

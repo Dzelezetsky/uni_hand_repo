@@ -110,3 +110,51 @@ def test_only_verified_mappings_get_geometry():
     assert all(mapping_verification(m)["status"] == "verified" for m in ok.mapping_id)
     for p in hs[hs.canonicalization_status != "ok"].path:
         assert "fingertips_palm_m" not in pd.read_parquet(OUT / p).columns, p
+
+
+@pytest.mark.parametrize("hid", HAND_IDS)
+def test_pad_normals_unit_perpendicular_and_palmar_at_rest(hid):
+    h = load_hand(hid)
+    n = h.fk.actuated_joints
+    rng = np.random.default_rng(2)
+    lo = np.array([h.fk.joints[j].lower for j in n]); hi = np.array([h.fk.joints[j].upper for j in n])
+    q = np.r_[np.clip(np.zeros((1, len(n))), lo, hi), lo + rng.random((5, len(n))) * (hi - lo)]
+    N = h.pad_normals_root(q, n)
+    assert np.allclose(np.linalg.norm(N, axis=2), 1.0)
+    poses = h.fk.link_poses(q, n, h.tip_links)
+    for i, s in enumerate(h.pad_normal_specs()):  # normal is perpendicular to the distal flexion axis
+        j = h.fk.joints[s["joint"]]
+        a = h.fk.link_poses(q, n, [j.child])[j.child][:, :3, :3] @ (j.axis / np.linalg.norm(j.axis))
+        assert np.abs(np.einsum("ti,ti->t", a, N[:, i])).max() < 1e-9
+    assert (h.canonical_pad_normals(q[:1], n)[0, 1:, 2] > 0.5).all()  # four fingers: pads face the palm side
+
+
+def test_pad_normals_left_right_agree_at_rest():
+    out = []
+    for hid in ("inspire_rh56dfx_right_unitree", "inspire_rh56dfx_left_unitree"):
+        h = load_hand(hid)
+        n = h.fk.actuated_joints
+        out.append(h.canonical_pad_normals(np.zeros((1, len(n))), n)[0])
+    assert np.abs(out[0][1:] - out[1][1:]).max() < 1e-3
+    assert np.degrees(np.arccos(np.clip((out[0][0] * out[1][0]).sum(), -1, 1))) < 10  # left URDF thumb differs a bit
+
+
+def test_reachability_self_fit_recovers_own_postures():
+    """best_fit must reproduce postures the hand itself produced (solver sanity)."""
+    from itertools import combinations
+
+    from unidex.reachability import best_fit, sample
+    pairs = list(combinations(range(5), 2))
+
+    def pw(p):
+        return np.stack([np.linalg.norm(p[:, i] - p[:, j], axis=1) for i, j in pairs], 1)
+
+    from scipy.spatial import cKDTree
+    mid = "humanoid_everyday_h1__inspire_rh56dfx_right"
+    S = sample(mid, n=20000, seed=1)
+    T = sample(mid, n=50, seed=2)  # independent postures of the same hand
+    targets = pw(T["tips_norm"])
+    nn = cKDTree(pw(S["tips_norm"])).query(targets)[1]  # same init scheme as scripts/analysis/reachability.py
+    _, r = best_fit(mid, pw, targets, S["raw"][nn])
+    rms = np.sqrt((r ** 2).mean(1))
+    assert np.median(rms) < 0.005 and (rms < 0.05).mean() > 0.95
