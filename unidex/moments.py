@@ -30,7 +30,10 @@ def _hrdexdb(r):
     ep = r.source_episode_id
     emb, obj, seq = ep.split("/")
     d = REPO / "raw_data/hrdexdb" / ep
-    z = np.load(REPO / f"raw_data/hrdexdb/object_6d_pose_v2/{emb}/{obj}_{seq}.npz")
+    pose = REPO / f"raw_data/hrdexdb/object_6d_pose_v2/{emb}/{obj}_{seq}.npz"
+    if not pose.exists():  # 4 F1 episodes only have object_6d_pose_v1 (convention not checked) -> excluded
+        return np.zeros(len(pd.read_parquet(UNI / r.path)), bool), "excluded_no_object_pose_v2"
+    z = np.load(pose)
     keys = sorted(z.files, key=lambda k: int(k.split("_")[1]))
     idx = np.array([int(k.split("_")[1]) for k in keys])
     h = (np.linalg.inv(np.load(d / "C2R.npy"))[None] @ np.stack([z[k] for k in keys]))[:, 2, 3]

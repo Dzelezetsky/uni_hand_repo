@@ -1,0 +1,72 @@
+Posture / grasp clustering v2 (10 pairwise distances, palm widths; KMeans, family-balanced)
+
+[ALL postures] n=20000 per family {'DFX': 4000, 'F1': 4000, 'Shadow': 4000, 'Sharpa': 4000, 'XHand': 4000}
+  k   silh  stabARI  NMIfam  1-fam   min%
+  2  0.308    0.988   0.029      0  43.7%
+  3  0.303    0.963   0.063      0  17.3%
+  4  0.328    0.924   0.066      0   6.3%
+  5  0.288    0.984   0.187      0   5.7%
+  6  0.290    0.952   0.256      0   5.5%
+  7  0.299    0.987   0.253      0   3.2%
+  8  0.273    0.788   0.242      0   3.2%
+  9  0.283    0.925   0.246      1   2.1%
+ 10  0.268    0.866   0.260      2   2.0%
+ 11  0.273    0.850   0.267      2   2.0%
+ 12  0.273    0.893   0.270      2   1.9%
+
+[GRASP samples (F1 lifted, Shadow contact)] n=4975 per family {'Shadow': 3000, 'F1': 1975}
+  k   silh  stabARI  NMIfam  1-fam   min%
+  2  0.319    0.978   0.154      0  47.8%
+  3  0.329    0.916   0.125      0  13.1%
+  4  0.256    0.753   0.231      1  12.0%
+  5  0.277    0.704   0.242      3   3.5%
+  6  0.268    0.968   0.246      3   3.4%
+  7  0.275    0.910   0.231      4   3.4%
+  8  0.284    0.909   0.225      5   2.3%
+  9  0.288    0.902   0.222      6   1.5%
+ 10  0.270    0.799   0.215      6   1.5%
+ 11  0.272    0.840   0.217      8   1.5%
+ 12  0.269    0.830   0.211      8   1.3%
+
+=== ALL postures, k=7  (clusters sorted by thumb-index distance; distances in palm widths)
+ c    TI    TM    TR    TP    IM    IR    IP    MR    MP    RP  | family share (balanced) | interaction rate | reachable (RMS pw)
+ 2  0.83  0.79  0.99  1.22  0.44  0.82  1.12  0.43  0.76  0.41  | Shadow:0.17 DFX:0.06 F1:0.39 XHand:0.21 Sharpa:0.18 | Shadow:0.96 F1:0.16 | Shadow:0.007 DFX:0.021 F1:0.025 XHand:0.011 Sharpa:0.007
+ 5  0.84  0.90  1.13  1.60  0.51  0.94  1.59  0.55  1.31  0.89  | Shadow:0.17 DFX:0.23 F1:0.15 XHand:0.10 Sharpa:0.35 | Shadow:0.95 F1:0.27 | Shadow:0.012 DFX:0.023 F1:0.026 XHand:0.012 Sharpa:0.012
+ 0  0.97  1.15  1.36  1.49  1.08  1.40  1.53  0.46  0.75  0.39  | Shadow:0.27 DFX:0.11 F1:0.04 XHand:0.10 Sharpa:0.48 | Shadow:0.99 F1:0.21 | Shadow:0.006 DFX:0.030 F1:0.067! XHand:0.006 Sharpa:0.006
+ 1  1.02  0.99  0.99  1.30  0.55  1.39  1.75  1.19  1.56  0.61  | Shadow:0.01 DFX:0.67 F1:0.10 XHand:0.09 Sharpa:0.14 | Shadow:0.00 F1:0.20 | Shadow:0.022 DFX:0.044 F1:0.052! XHand:0.026 Sharpa:0.026
+ 4  1.63  1.81  1.98  2.12  0.31  0.62  0.93  0.33  0.66  0.36  | Shadow:0.02 DFX:0.02 F1:0.00 XHand:0.61 Sharpa:0.35 | Shadow:0.70 F1:0.00 | Shadow:0.003 DFX:0.018 F1:0.124! XHand:0.003 Sharpa:0.003
+ 3  1.67  1.67  1.79  1.94  0.50  0.89  1.33  0.45  0.92  0.51  | Shadow:0.45 DFX:0.08 F1:0.32 XHand:0.04 Sharpa:0.10 | Shadow:0.57 F1:0.04 | Shadow:0.005 DFX:0.008 F1:0.014 XHand:0.006 Sharpa:0.005
+ 6  2.16  2.35  2.51  2.65  0.39  0.77  1.16  0.40  0.81  0.42  | Shadow:0.04 DFX:0.74 F1:0.05 XHand:0.09 Sharpa:0.09 | Shadow:0.51 F1:0.01 | Shadow:0.001 DFX:0.005 F1:0.142! XHand:0.003 Sharpa:0.001
+objects by majority cluster of their GRASP samples (purity = share in that cluster; >= 10 samples):
+  c2: 5 objects, purity median 0.67: green_attached_container(F) 1.00, hammer(F) 0.80, brass_pot(F) 0.67, body_wash(S) 0.52, bathroom_cleaner(S) 0.50
+  c5: 1 objects, purity median 0.50: toothbrush_holder(F) 0.50
+  c0: 0 objects, purity median nan: 
+  c1: 0 objects, purity median nan: 
+  c4: 0 objects, purity median nan: 
+  c3: 8 objects, purity median 0.53: big_eye_toy(S) 0.95, cylinder(S) 0.77, beer(S) 0.72, air_duster(S) 0.58, body_lotion(S) 0.49, big_detergent(S) 0.45, box(S) 0.45, blue_cup(S) 0.32
+  c6: 0 objects, purity median nan: 
+T-Rex samples per cluster: over-represented motor primitives / objects (share in cluster / overall):
+  c2 primitive (n=557): wrap x2.3, fold x2.0, peel x1.9, wipe x1.8, screw x1.8, pour x1.7
+  c5 primitive (n=121): twist x8.4, cut x4.1, lift_and_place x1.2, grasp_and_lifting x0.7
+  c0 primitive (n=179): screw x4.3, insert x3.5, cut x2.8, peel x2.1, press x1.4, wrap x1.1
+  c1 primitive (n=50): assemble x15.4
+  c4 primitive (n=1274): press x1.6, grasp_and_lifting x1.4, lift_and_place x1.3, pour x1.3, reach x1.2, squeeze x1.1
+  c3 primitive (n=559): close x2.1, wrap x1.7, fold x1.5, reach x1.5, twist x1.4, open x1.3
+  c6 primitive (n=262): open x2.5, reach x2.1, grasp_and_lifting x1.4, press x1.0, lift_and_place x1.0
+  c2 trex_object (n=557): adhesive wrap x3.2, sugar x2.8, bandage x2.1, backpack x2.0, muslin x1.8, ethernet cable x1.6
+  c5 trex_object (n=121): screw x13.9
+  c0 trex_object (n=179): coin x8.2, airpods case & airpods x4.0
+  c1 trex_object (n=50): toy tower of hanoi x60.0
+  c4 trex_object (n=1274): gel pad x2.4, package x2.2, switch on off x2.0, string x1.8, keyboard x1.8, card x1.8
+  c3 trex_object (n=559): eyeshadow palette x5.4, airpods case & airpods x2.0, muslin x2.0, bubble wrap x1.8, soap box x1.7, flip phone x1.7
+  c6 trex_object (n=262): hand sanitizer x6.2, shorts x3.6, clamshell container x2.5
+
+=== GRASP samples, k=3  (clusters sorted by thumb-index distance; distances in palm widths)
+ c    TI    TM    TR    TP    IM    IR    IP    MR    MP    RP  | family share (balanced) | interaction rate | reachable (RMS pw)
+ 2  0.81  0.71  0.88  1.06  0.43  0.79  1.09  0.42  0.73  0.42  | Shadow:0.27 F1:0.73 | Shadow:1.00 F1:1.00 | Shadow:0.009 DFX:0.024 F1:0.025 XHand:0.010 Sharpa:0.009
+ 1  1.61  1.55  1.64  1.86  0.49  0.89  1.37  0.46  0.97  0.55  | Shadow:0.74 F1:0.26 | Shadow:1.00 F1:1.00 | Shadow:0.005 DFX:0.010 F1:0.028 XHand:0.005 Sharpa:0.005
+ 0  1.66  1.17  1.22  1.40  0.95  1.25  1.42  0.48  0.82  0.41  | Shadow:0.69 F1:0.31 | Shadow:1.00 F1:1.00 | Shadow:0.007 DFX:0.037 F1:0.049 XHand:0.010 Sharpa:0.007
+objects by majority cluster of their GRASP samples (purity = share in that cluster; >= 10 samples):
+  c2: 64 objects, purity median 0.89: balloon_whisk(F) 1.00, banana(F) 1.00, black_holder_with_handle(F) 1.00, black_kitchen_roll_holder(F) 1.00, book(F) 1.00, cactus2(F) 1.00, blue_alarm(F) 1.00, circular_frying_pan(F) 1.00, green_cactus_vase(F) 1.00, green_attached_container(F) 1.00, icecream_scoop(F) 1.00, frog_bowl(F) 1.00
+  c1: 23 objects, purity median 0.69: soaptray(F) 1.00, jja_ramen(F) 1.00, cactus(F) 1.00, tea_case(F) 1.00, orange(F) 0.94, pepper_tuna(F) 0.86, big_eye_toy(S) 0.83, lotion(F) 0.83, cylinder(S) 0.76, baby_beaker(F) 0.73, apple(F) 0.69, pink_clock(F) 0.69
+  c0: 5 objects, purity median 0.47: fruit_cutter_green(F) 0.58, tennis_ball(F) 0.47, meat_thermometer(F) 0.47, bamboo_box(F) 0.41, donut(F) 0.38

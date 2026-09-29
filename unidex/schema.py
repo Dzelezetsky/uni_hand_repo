@@ -54,6 +54,7 @@ class Camera:
     depth_ref: str | None = None
     frame_t: np.ndarray | None = None        # (F,) seconds rel. to t0, if known
     local: bool = True                       # False: referenced but not downloaded in this sample
+    frame_index_offset: int = 0              # first frame of this episode inside rgb_ref (LeRobot v3 concatenated videos)
 
 
 @dataclass

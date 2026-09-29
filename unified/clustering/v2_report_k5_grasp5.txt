@@ -1,0 +1,57 @@
+Posture / grasp clustering v2 (10 pairwise distances, palm widths; KMeans, family-balanced)
+
+[ALL postures] n=12000 per family {'DFX': 4000, 'F1': 4000, 'Shadow': 4000}
+  k   silh  stabARI  NMIfam  1-fam   min%
+  2  0.298    0.980   0.049      0  48.1%
+  3  0.352    0.984   0.111      1   7.1%
+  4  0.347    0.865   0.216      1   5.5%
+  5  0.338    0.970   0.241      2   5.5%
+  6  0.320    0.753   0.244      3   5.0%
+  7  0.334    0.930   0.241      3   3.2%
+  8  0.341    0.868   0.245      4   2.1%
+  9  0.310    0.737   0.262      4   2.1%
+ 10  0.314    0.835   0.269      4   2.0%
+ 11  0.317    0.935   0.267      4   1.2%
+ 12  0.323    0.918   0.292      6   1.2%
+
+[GRASP samples (F1 lifted, Shadow contact)] n=6000 per family {'F1': 3000, 'Shadow': 3000}
+  k   silh  stabARI  NMIfam  1-fam   min%
+  2  0.321    0.980   0.171      0  48.5%
+  3  0.332    0.919   0.139      0  12.6%
+  4  0.336    0.691   0.151      1   9.8%
+  5  0.272    0.843   0.236      2   3.4%
+  6  0.280    0.896   0.202      3   3.6%
+  7  0.270    0.953   0.225      3   3.3%
+  8  0.281    0.888   0.217      4   2.3%
+  9  0.263    0.792   0.213      5   2.3%
+ 10  0.269    0.864   0.214      6   1.6%
+ 11  0.262    0.716   0.203      6   1.4%
+ 12  0.268    0.813   0.211      8   1.3%
+
+=== ALL postures, k=5  (clusters sorted by thumb-index distance; distances in palm widths)
+ c    TI    TM    TR    TP    IM    IR    IP    MR    MP    RP  | family share (balanced) | interaction rate | reachable (RMS pw)
+ 4  0.96  0.88  1.05  1.28  0.45  0.81  1.14  0.41  0.78  0.42  | Shadow:0.28 DFX:0.12 F1:0.59 | Shadow:0.95 F1:0.15 | Shadow:0.006 DFX:0.014 F1:0.019
+ 0  1.09  1.05  1.00  1.31  0.57  1.37  1.82  1.10  1.63  0.76  | Shadow:0.02 DFX:0.88 F1:0.10 | Shadow:0.43 F1:0.18 | Shadow:0.020 DFX:0.043 F1:0.051!
+ 2  1.56  1.16  1.25  1.45  1.00  1.30  1.49  0.48  0.82  0.42  | Shadow:0.57 DFX:0.29 F1:0.14 | Shadow:0.96 F1:0.17 | Shadow:0.008 DFX:0.036 F1:0.050!
+ 3  1.69  1.66  1.75  1.91  0.50  0.89  1.35  0.45  0.94  0.53  | Shadow:0.57 DFX:0.08 F1:0.35 | Shadow:0.58 F1:0.04 | Shadow:0.005 DFX:0.008 F1:0.019
+ 1  2.13  2.31  2.46  2.59  0.40  0.78  1.18  0.41  0.83  0.43  | Shadow:0.06 DFX:0.83 F1:0.11 | Shadow:0.55 F1:0.01 | Shadow:0.001 DFX:0.003 F1:0.118!
+objects by majority cluster of their GRASP samples (purity = share in that cluster; >= 10 samples):
+  c4: 8 objects, purity median 0.73: metal_measuring_flask(F) 1.00, yellow_wash_tub(F) 1.00, toothbrush_holder(F) 0.80, hammer(F) 0.77, white_hand_shower(F) 0.70, plant_pot(F) 0.64, body_wash(S) 0.59, bathroom_cleaner(S) 0.50
+  c0: 0 objects, purity median nan: 
+  c2: 0 objects, purity median nan: 
+  c3: 9 objects, purity median 0.50: big_eye_toy(S) 0.92, cylinder(S) 0.70, grey_pot(F) 0.69, beer(S) 0.63, body_lotion(S) 0.50, big_detergent(S) 0.47, air_duster(S) 0.46, box(S) 0.44, blue_cup(S) 0.32
+  c1: 0 objects, purity median nan: 
+
+=== GRASP samples, k=5  (clusters sorted by thumb-index distance; distances in palm widths)
+ c    TI    TM    TR    TP    IM    IR    IP    MR    MP    RP  | family share (balanced) | interaction rate | reachable (RMS pw)
+ 1  0.56  0.44  0.66  0.91  0.41  0.78  1.11  0.42  0.78  0.50  | Shadow:0.05 F1:0.95 | Shadow:1.00 F1:1.00 | Shadow:0.009 DFX:0.027 F1:0.025
+ 4  0.76  0.53  1.11  1.31  0.59  1.03  1.36  1.01  1.18  0.55  | Shadow:0.01 F1:0.99 | Shadow:1.00 F1:1.00 | Shadow:0.011 DFX:0.071! F1:0.052!
+ 3  1.22  1.15  1.22  1.35  0.46  0.81  1.12  0.39  0.72  0.37  | Shadow:0.62 F1:0.38 | Shadow:1.00 F1:1.00 | Shadow:0.011 DFX:0.014 F1:0.032
+ 0  1.66  1.61  1.69  1.91  0.50  0.89  1.38  0.46  0.99  0.58  | Shadow:0.79 F1:0.21 | Shadow:1.00 F1:1.00 | Shadow:0.005 DFX:0.015 F1:0.033
+ 2  1.66  1.18  1.22  1.39  0.98  1.28  1.44  0.44  0.78  0.41  | Shadow:0.76 F1:0.24 | Shadow:1.00 F1:1.00 | Shadow:0.004 DFX:0.041 F1:0.052!
+objects by majority cluster of their GRASP samples (purity = share in that cluster; >= 10 samples):
+  c1: 56 objects, purity median 0.79: banana(F) 1.00, black_holder_with_handle(F) 1.00, blue_alarm(F) 1.00, book(F) 1.00, frame_red(F) 1.00, frog_bowl(F) 1.00, frame_oak(F) 1.00, icecream_scoop(F) 1.00, smallbowl(F) 1.00, thermo_clock(F) 1.00, wipe(F) 1.00, redcar(F) 1.00
+  c4: 1 objects, purity median 0.39: scotch_tape(F) 0.39
+  c3: 16 objects, purity median 0.55: cactus2(F) 0.88, baby_beaker(F) 0.88, apple(F) 0.84, green_soap_dispenser(F) 0.84, pastel_blue_cup(F) 0.77, lemon(F) 0.68, bamboo_box(F) 0.68, body_wash(S) 0.55, orange(F) 0.55, brown_ramen(F) 0.53, metal_scoop_small(F) 0.48, clothes_hanger(F) 0.48
+  c0: 21 objects, purity median 0.54: jja_ramen(F) 1.00, soaptray(F) 0.92, cactus(F) 0.79, white_wood_handle_watering_can(F) 0.74, pepper_tuna(F) 0.69, white_soap_dish(F) 0.68, beer(S) 0.66, big_eye_toy(S) 0.64, cylinder(S) 0.57, body_lotion(S) 0.55, grey_pot(F) 0.54, air_duster(S) 0.51
+  c2: 3 objects, purity median 0.43: donut(F) 0.55, fruit_cutter_green(F) 0.43, tennis_ball(F) 0.30

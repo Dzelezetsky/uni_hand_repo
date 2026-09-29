@@ -32,6 +32,8 @@ NATIVE_RANGES = {
         np.zeros(6), np.ones(6), "Unitree normalization 0..1 (xr_teleoperate robot_hand_inspire.py)"),
     "humanoid_everyday_h1__inspire_rh56dfx_left": NativeRange(
         np.zeros(6), np.ones(6), "Unitree normalization 0..1 (xr_teleoperate robot_hand_inspire.py)"),
+    "dexora__xhand1_right": NativeRange(None, None, "URDF joint limits (identity rad mapping)"),
+    "trex__sharpa_wave_right": NativeRange(None, None, "URDF joint limits (identity rad mapping)"),
     "hrdexdb__inspire_rh56f1_right": NativeRange(
         None, None, "data-observed p0.5..p99.5 per channel over the unified store (no official F1 range at hand): "
                     "reach AS USED in HRDexDB, may underestimate the hardware range"),
@@ -71,17 +73,19 @@ def native_box(mapping_id: str) -> tuple[np.ndarray, np.ndarray]:
     spec = NATIVE_RANGES[mapping_id]
     if spec.lo is not None:
         return spec.lo, spec.hi
-    if mapping_id == "realdex__shadow_e_right":
+    if spec.source.startswith("URDF joint limits"):  # identity mappings: native range = URDF limits
         hand = load_hand(m.hand_model_id)
         return (np.array([hand.fk.joints[j].lower for j in m.model_joints]),
                 np.array([hand.fk.joints[j].upper for j in m.model_joints]))
     return _data_range(mapping_id)
 
 
-def best_fit(mapping_id: str, feature_fn, targets: np.ndarray, init_raw: np.ndarray, iters: int = 60) -> tuple:
+def best_fit(mapping_id: str, feature_fn, targets: np.ndarray, init_raw: np.ndarray, iters: int = 60,
+             with_normals: bool = False) -> tuple:
     """Batched box-constrained Levenberg-Marquardt in NATIVE space: for every target feature vector find native hand
     parameters of `mapping_id` minimizing |feature_fn(tips_norm) - target|. Returns (raw (N,d), residual (N,F)).
-    Optimizes u in [0,1]^d (raw = lo + u * span) so damping is scale-free across native units."""
+    Optimizes u in [0,1]^d (raw = lo + u * span) so damping is scale-free across native units.
+    with_normals=True: feature_fn(tips_norm, pad_normals) instead of feature_fn(tips_norm)."""
     m = MAPPINGS[mapping_id]
     hand = load_hand(m.hand_model_id)
     names = list(m.model_joints)
@@ -89,7 +93,10 @@ def best_fit(mapping_id: str, feature_fn, targets: np.ndarray, init_raw: np.ndar
     span = np.maximum(hi - lo, 1e-12)
 
     def feats(u):
-        return feature_fn(hand.canonical(m(lo + u * span), names)[1])
+        q = m(lo + u * span)
+        if with_normals:
+            return feature_fn(hand.canonical(q, names)[1], hand.canonical_pad_normals(q, names))
+        return feature_fn(hand.canonical(q, names)[1])
 
     u = np.clip((np.asarray(init_raw, float) - lo) / span, 0, 1)
     N, d = u.shape

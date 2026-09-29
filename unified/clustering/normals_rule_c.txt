@@ -1,0 +1,60 @@
+Rule C admission test for pad-normal features (hand-balanced, verified hands)
+
+1-2  mixing ratio (~1 mixed, >>1 hand-specific), NMI(cluster, hand) and single-hand clusters at k=5:
+          dim  mixing_median  mix_DFX-L  mix_DFX-R  mix_F1  mix_Shadow  NMI_hand  single_hand_clusters
+features                                                                                              
+D          10           2.17       0.28       2.92    2.24        2.09      0.23                     0
+D+cos      20           2.75       0.96       3.29    3.05        2.45      0.33                     1
+D+th       13           3.93       0.71       5.09    4.25        3.60      0.30                     0
+D+N        25           3.50       0.71       4.35    4.13        2.87      0.29                     0
+cos        10           2.55       0.53       3.30    2.53        2.57      0.35                     2
+
+3    held-out gain over copy-current, event windows, D=1.0s, x = current D+N for all rows,
+     classes = k=5 clusters of the FUTURE in the given feature set:
+            future distances  future normals
+D                      0.774           0.636
+D+N                    0.745           0.717
+D+cos                  0.744           0.618
+D+th                   0.743           0.537
+cos                    0.635           0.602
+none (k=1)             0.319           0.289
+
+4    reachability in D+cos: row = real frames of, column = hand that must reproduce (dist RMS<0.05 pw, cos RMS<0.1)
+        DFX-L  DFX-R    F1  Shadow
+DFX-L    1.00   1.00  0.01    1.00
+DFX-R    1.00   1.00  0.14    1.00
+F1       0.57   0.62  0.99    0.99
+Shadow   0.07   0.08  0.07    1.00
+
+frames 13842 (DFX-L 212, DFX-R 1191, F1 7045, Shadow 5394), anchors 13342
+
+D      clusters (hand-balanced composition, columns DFX-L, DFX-R, F1, Shadow):
+    0.57  0.39  0.01  0.03
+    0.16  0.69  0.14  0.01
+    0.28  0.18  0.15  0.38
+    0.08  0.07  0.35  0.50
+    0.10  0.18  0.48  0.24
+D+cos  clusters (hand-balanced composition, columns DFX-L, DFX-R, F1, Shadow):
+    0.00  0.08  0.46  0.47
+    0.38  0.52  0.10  0.01
+    0.36  0.40  0.22  0.02
+    0.56  0.33  0.02  0.09
+    0.00  0.85  0.15  0.00
+D+th   clusters (hand-balanced composition, columns DFX-L, DFX-R, F1, Shadow):
+    0.45  0.46  0.09  0.00
+    0.51  0.33  0.07  0.10
+    0.23  0.68  0.09  0.00
+    0.10  0.11  0.07  0.72
+    0.00  0.11  0.62  0.27
+D+N    clusters (hand-balanced composition, columns DFX-L, DFX-R, F1, Shadow):
+    0.06  0.13  0.54  0.27
+    0.50  0.38  0.11  0.01
+    0.18  0.75  0.07  0.00
+    0.40  0.50  0.06  0.04
+    0.07  0.04  0.29  0.60
+cos    clusters (hand-balanced composition, columns DFX-L, DFX-R, F1, Shadow):
+    0.00  0.24  0.37  0.39
+    0.00  0.93  0.07  0.00
+    0.35  0.51  0.14  0.00
+    0.34  0.50  0.14  0.03
+    0.80  0.04  0.07  0.09

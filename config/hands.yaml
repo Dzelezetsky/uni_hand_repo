@@ -16,9 +16,11 @@ hand_models:
   xhand1_right:
     family: xhand1
     side: right
-    urdf: external_hand_models/spider/spider/assets/robots/xhand/xhand_right.urdf
-    model_source: https://github.com/facebookresearch/spider (spider/assets/robots/xhand/xhand_right.urdf)
-    model_status: third_party_candidate
+    urdf: external_hand_models/roboterax_models/xhand1_right_star1.urdf
+    model_source: https://github.com/roboterax/models (star1/urdf/l3_with_hand_fixedpin_xml.urdf, RobotEra official,
+      BSD-3; hand sub-tree extracted by scripts/models/extract_star1_xhand.py). Finger joints identical to the former
+      SPIDER model (facebookresearch/spider xhand_right.urdf).
+    model_status: exact_official
     palm_link: right_hand_link
     wrist_frame: right_hand_link
     finger_base_joints: {index: right_hand_index_bend_joint, middle: right_hand_mid_joint1,
@@ -29,6 +31,23 @@ hand_models:
       middle: {link: right_hand_mid_tip}
       ring: {link: right_hand_ring_tip}
       pinky: {link: right_hand_pinky_tip}
+
+  xhand1_left:
+    family: xhand1
+    side: left
+    urdf: external_hand_models/roboterax_models/xhand1_left_star1.urdf
+    model_source: https://github.com/roboterax/models (star1 URDF, RobotEra official, BSD-3; left hand sub-tree)
+    model_status: exact_official
+    palm_link: left_hand_link
+    wrist_frame: left_hand_link
+    finger_base_joints: {index: left_hand_index_bend_joint, middle: left_hand_mid_joint1,
+                         ring: left_hand_ring_joint1, pinky: left_hand_pinky_joint1}
+    tips:
+      thumb: {link: left_hand_thumb_rota_tip}
+      index: {link: left_hand_index_rota_tip}
+      middle: {link: left_hand_mid_tip}
+      ring: {link: left_hand_ring_tip}
+      pinky: {link: left_hand_pinky_tip}
 
   shadow_e_right_realdex:
     family: shadow_dexterous_hand_e
@@ -185,10 +204,49 @@ hand_models:
       ring: {link: right_ring_tip_link}
       pinky: {link: right_pinky_tip_link}
 
+  sharpa_wave_right:
+    family: sharpa_wave
+    side: right
+    urdf: external_hand_models/sharpa-urdf-usd-xml/wave_01/right_sharpa_wave/right_sharpa_wave.urdf
+    model_source: https://github.com/sharpa-robotics/sharpa-urdf-usd-xml (wave_01, Apache-2.0; byte-identical to the copy
+      vendored by T-Rex dataset_quickstart/third_party, whose joint order the T-Rex authors verified against the data)
+    model_status: exact_official
+    palm_link: right_hand_C_MC
+    wrist_frame: right_hand_C_MC
+    # pinky has a CMC (metacarpal) joint 1 cm proximal to its knuckle: use the knuckle (MCP_FE) as base landmark,
+    # taken with pinky_CMC = 0 (same convention as Shadow LFJ4 / LFJ5).
+    finger_base_joints: {index: right_index_MCP_FE, middle: right_middle_MCP_FE, ring: right_ring_MCP_FE,
+                         pinky: right_pinky_MCP_FE}
+    tips:
+      thumb: {link: right_thumb_fingertip}
+      index: {link: right_index_fingertip}
+      middle: {link: right_middle_fingertip}
+      ring: {link: right_ring_fingertip}
+      pinky: {link: right_pinky_fingertip}
+
+  sharpa_wave_left:
+    family: sharpa_wave
+    side: left
+    urdf: external_hand_models/sharpa-urdf-usd-xml/wave_01/left_sharpa_wave/left_sharpa_wave.urdf
+    model_source: https://github.com/sharpa-robotics/sharpa-urdf-usd-xml (wave_01, Apache-2.0; byte-identical to the copy
+      vendored by T-Rex dataset_quickstart/third_party, whose joint order the T-Rex authors verified against the data)
+    model_status: exact_official
+    palm_link: left_hand_C_MC
+    wrist_frame: left_hand_C_MC
+    # pinky has a CMC (metacarpal) joint 1 cm proximal to its knuckle: use the knuckle (MCP_FE) as base landmark,
+    # taken with pinky_CMC = 0 (same convention as Shadow LFJ4 / LFJ5).
+    finger_base_joints: {index: left_index_MCP_FE, middle: left_middle_MCP_FE, ring: left_ring_MCP_FE,
+                         pinky: left_pinky_MCP_FE}
+    tips:
+      thumb: {link: left_thumb_fingertip}
+      index: {link: left_index_fingertip}
+      middle: {link: left_middle_fingertip}
+      ring: {link: left_ring_fingertip}
+      pinky: {link: left_pinky_fingertip}
+
 # Hands present in selected datasets for which no usable kinematic model exists (native import only).
 missing_models:
   inspire_rh56dfx_gello: {datasets: [robomind_tienkung], status: missing_joint_mapping, reason: "Gello subset stores a single closure value per hand; per-finger state not recorded"}
-  xhand1_left: {datasets: [vitra_teledata], status: no_data, reason: "left arm/hand not present in the released VITRA data"}
   fourier_fdh12: {datasets: [fourier_actionnet], reason: "no public FDH-12 URDF found; FDH-6 model must not be reused"}
   fourier_6dof_on_gr2: {datasets: [fourier_actionnet], status: missing_joint_mapping, reason: "6-DoF hand on GR2, variant unconfirmed; same motor-unit problem as FDH-6"}
   agibot_g1_dexhand: {datasets: [agibot_world], reason: "exact G1 5-finger hand URDF/USD not public (AgiBot-World issue #155)"}
@@ -200,8 +258,8 @@ missing_models:
 validation:
   xhand1_right:
     status: visually_checked
-    evidence: "vitra 000130: flexion on tomato grasp matches head-cam frames (small in image). Third-party URDF:
-      exact XHand1 revision unconfirmed. 0.2% samples exceed URDF limits by <0.07 rad."
+    evidence: "vitra 000130: flexion on tomato grasp matches head-cam frames (small in image). Model now RobotEra STAR1
+      (identical finger kinematics to the SPIDER model used for that check). 0.2% samples exceed limits by <0.07 rad."
   shadow_e_right_realdex:
     status: visually_checked
     evidence: "realdex cylinder_1: finger flexion during cylinder grasp matches cam0; URDF shipped by RealDex."

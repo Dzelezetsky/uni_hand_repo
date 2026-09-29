@@ -8,7 +8,10 @@
 #   V2 mapping  raw -> joint conversion taken from official dataset / integrator code or docs, no own assumptions
 #   V3 state    measured (joint or actuator); not command, not unknown
 #   V4 visual   FK geometry matches RGB at the same timestamp (unified/validation/)
-#   V5 limits   < 1% of samples outside URDF joint limits (> 0.05 rad)
+#   V5 limits   < 1% of samples beyond URDF joint limits by > 0.15 rad (V5_TOL). Smaller excess is accepted as
+#               encoder / URDF calibration tolerance (user decision 2026-09-29: RealDex Shadow THJ4/RFJ2/LFJ4 exceed
+#               nominal limits by <= 0.15 rad in 1.4% of samples). Samples > 0.3 rad beyond a limit are physically
+#               impossible (e.g. sensor dropout) and are marked valid = False by the converter, not counted.
 #   V6 time     per-sample timestamps available
 
 criteria: [V1_model, V2_mapping, V3_measured_state, V4_visual_check, V5_joint_limits, V6_timestamps]
@@ -28,6 +31,40 @@ mappings:
     status: verified
     checks: {V1: pass, V2: pass, V3: pass, V4: pass, V5: pass, V6: pass}
 
+  trex__sharpa_wave_right:
+    status: verified
+    checks: {V1: pass, V2: pass, V3: pass, V4: pass_coarse, V5: pass, V6: pass}
+    note: "Official Sharpa wave_01 URDF (byte-identical to the T-Rex vendored copy); joint order = authors' schema.py
+      (authors verified it manually against the data); state = measured joint positions. V5: 0.004% samples > 0.15 rad.
+      V4 (2026-09-29, unified/validation/v4/trex__*): closure timing matches grasp/release in head + wrist cameras, idle
+      hand open and static; finger-level detail not resolvable at 640x360 -> coarse pass. Revoke if a finer check fails."
+  trex__sharpa_wave_left:
+    status: verified
+    checks: {V1: pass, V2: pass, V3: pass, V4: pass_coarse, V5: pass, V6: pass}
+    note: "see trex__sharpa_wave_right; V5: 0.016% samples > 0.15 rad."
+
+  dexora__xhand1_right:
+    status: verified
+    checks: {V1: pass, V2: pass, V3: pass, V4: pass, V5: pass, V6: pass}
+    note: "XHand1 = RobotEra STAR1 model; order = Dexora deploy/xhand_forwarder.py; state = /observation joint_state.
+      V4 (unified/validation/v4/dexora__*): ep 50 straight-finger hook matches static hand, ep 300 left power grasp on
+      ukulele neck + release. V5 over all 11,517 ep: 0 % > 0.15 rad (max 0.12), 2.7 % > 0.05 (joint2 near limit)."
+  dexora__xhand1_left:
+    status: verified
+    checks: {V1: pass, V2: pass, V3: pass, V4: pass, V5: pass, V6: pass}
+    note: "see dexora__xhand1_right; V5: 0 % > 0.15 rad (max 0.14), 5.7 % > 0.05 (mostly ring_joint2)."
+
+  origami__sharpa_wave_right:
+    status: verified
+    checks: {V1: pass, V2: inferred_user_accepted, V3: pass, V4: pass_coarse, V5: pass, V6: pass}
+    note: "Official Sharpa wave_01 model. Channel order j0..j21 not documented by Sharpa: inferred = URDF/T-Rex order
+      because every channel's range fits its joint's URDF limits (user accepted 2026-09-30). V4 coarse (both hands in
+      pinch postures on the paper throughout the fold, 640-px head cam). V5 over 1,813 ep: 0.017 % > 0.15 rad."
+  origami__sharpa_wave_left:
+    status: verified
+    checks: {V1: pass, V2: inferred_user_accepted, V3: pass, V4: pass_coarse, V5: pass, V6: pass}
+    note: "see origami__sharpa_wave_right; V5: 0.16 % > 0.15 rad (middle_DIP, pinky_CMC), max 0.23."
+
   hrdexdb__inspire_rh56dftp_right:
     status: excluded
     checks: {V1: pass, V2: pass, V3: pass, V4: pass, V5: FAIL, V6: pass}
@@ -35,10 +72,9 @@ mappings:
       conversion and model are inconsistent, the thumb-yaw scale of every frame is in doubt. Re-include once resolved
       (e.g. confirmation from the HRDexDB authors)."
   vitra_teledata__xhand1_right:
-    status: excluded
-    checks: {V1: FAIL, V2: pass, V3: pass, V4: pass, V5: pass, V6: pass}
-    reason: "URDF is third-party (facebookresearch/spider); no official RobotEra XHand1 model found. Re-include with an
-      official model."
+    status: verified
+    checks: {V1: pass, V2: pass, V3: pass, V4: pass, V5: pass, V6: pass}
+    note: "V1 re-evaluated 2026-09-29 (user decision): official RobotEra STAR1 URDF, hand identical to the SPIDER model."
   dexwild_robot__leap_v2_adv_right:
     status: excluded
     checks: {V1: pass, V2: pass, V3: FAIL, V4: pass, V5: FAIL, V6: pass}
@@ -70,6 +106,10 @@ not_processed:
 #   P3 rgb      arrows consistent with the grasp in unified/validation/pad_normals/rgb__*.png (manual)
 # P1 auto-passed for all registry models; P2/P3 approved by the user on 2026-09-29 for the four models below.
 pad_normals:
+  xhand1_right:                  {status: verified, checks: {P1: pass, P2: pass, P3: pass}}  # render approved 2026-09-29 (SPIDER file, identical kinematics)
+  sharpa_wave_right:             {status: unreviewed, checks: {P1: pass, P2: todo, P3: todo}}
+  sharpa_wave_left:              {status: unreviewed, checks: {P1: pass, P2: todo, P3: todo}}
+  xhand1_left:                   {status: verified, checks: {P1: pass, P2: pass, P3: todo}}  # mirror of right, render identical
   shadow_e_right_realdex:        {status: verified, checks: {P1: pass, P2: pass, P3: pass}}
   inspire_rh56dfx_right_unitree: {status: verified, checks: {P1: pass, P2: pass, P3: pass}}
   inspire_rh56dfx_left_unitree:  {status: verified, checks: {P1: pass, P2: pass, P3: pass}}

@@ -86,7 +86,7 @@ def test_flexion_moves_fingertips_to_palmar_side(hid):
     hi = np.array([h.fk.joints[j].upper or 0 for j in n])
     q0 = np.clip(np.zeros(len(n)), lo, hi)
     flex = [j for j in n if any(k in j.lower() for k in ("proximal", "_1_joint", "joint1", "mcpf", "j3", "ffj3",
-                                                          "mfj3", "rfj3", "lfj3"))
+                                                          "mfj3", "rfj3", "lfj3", "mcp_fe"))
             and "thumb" not in j.lower() and "th" != j.lower()[3:5]]
     q1 = q0.copy()
     for j in flex:

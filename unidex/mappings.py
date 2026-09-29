@@ -178,6 +178,70 @@ DEXWILD_LEAP = HandMapping(
              "thumb-swapped), unified/validation/leap_ik_consistency.txt. Geometry = IK solution, not measured pose.",
 )
 
+# ---------------------------------------------------------------- T-Rex / Sharpa Wave (both hands)
+# observation.state[58] = [L_arm7 | L_hand22 | R_arm7 | R_hand22], hand joint positions in rad.
+# Order = T-Rex dataset_quickstart schema.py SHARPA_HAND_JOINT_ORDER (authors: "verified manually against the data"),
+# identical to the joint order of the official Sharpa wave_01 URDF.
+SHARPA_HAND_JOINT_ORDER = (
+    "thumb_CMC_FE", "thumb_CMC_AA", "thumb_MCP_FE", "thumb_MCP_AA", "thumb_IP",
+    "index_MCP_FE", "index_MCP_AA", "index_PIP", "index_DIP",
+    "middle_MCP_FE", "middle_MCP_AA", "middle_PIP", "middle_DIP",
+    "ring_MCP_FE", "ring_MCP_AA", "ring_PIP", "ring_DIP",
+    "pinky_CMC", "pinky_MCP_FE", "pinky_MCP_AA", "pinky_PIP", "pinky_DIP")
+
+
+def _trex(side):
+    return HandMapping(
+        mapping_id=f"trex__sharpa_wave_{side}", version="1.0", hand_model_id=f"sharpa_wave_{side}",
+        raw_names=tuple(f"{side}_hand_q_{i}" for i in range(22)), raw_units="rad",
+        model_joints=tuple(f"{side}_{n}" for n in SHARPA_HAND_JOINT_ORDER), fn=_identity,
+        evidence="T-Rex dataset README (observation.state = joint positions, action = targets) + "
+                 "github ZhuoyangLiu2005/T-Rex dataset_quickstart/src/trex_dataset_quickstart/schema.py "
+                 "SHARPA_HAND_JOINT_ORDER and robot.py (Pinocchio FK on the vendored official Sharpa model).",
+    )
+
+
+TREX_SHARPA_LEFT = _trex("left")
+TREX_SHARPA_RIGHT = _trex("right")
+
+
+def _sharpa_origami(side):
+    return HandMapping(
+        mapping_id=f"origami__sharpa_wave_{side}", version="1.0", hand_model_id=f"sharpa_wave_{side}",
+        raw_names=tuple(f"{side}_hand_j{i}" for i in range(22)), raw_units="rad",
+        model_joints=tuple(f"{side}_{n}" for n in SHARPA_HAND_JOINT_ORDER), fn=_identity,
+        evidence="SharpaIT/Robotic_Origami_Challenge README (state = joint space, hand j0..j21); channel order NOT "
+                 "documented: inferred = Sharpa URDF / T-Rex order because every channel's range fits its URDF joint "
+                 "(AA joints around 0, pinky_CMC 0..0.22 of 0.26, thumb_CMC_FE up to 1.42); user accepted 2026-09-30.",
+    )
+
+
+ORIGAMI_SHARPA_LEFT = _sharpa_origami("left")
+ORIGAMI_SHARPA_RIGHT = _sharpa_origami("right")
+
+# ---------------------------------------------------------------- Dexora / XHand1 (both hands)
+# observation.state[39] = [L_arm6, R_arm6, L_hand12, R_hand12, head2, spine1]; hands in rad (values <= ~1.9).
+# Hand order = official Dexora deploy/xhand_forwarder.py (index 0..11) = XHand SDK order = URDF joint names.
+_XHAND_ORDER = ("thumb_bend_joint", "thumb_rota_joint1", "thumb_rota_joint2", "index_bend_joint", "index_joint1",
+                "index_joint2", "mid_joint1", "mid_joint2", "ring_joint1", "ring_joint2", "pinky_joint1", "pinky_joint2")
+
+
+def _dexora(side):
+    return HandMapping(
+        mapping_id=f"dexora__xhand1_{side}", version="1.0", hand_model_id=f"xhand1_{side}",
+        raw_names=tuple(f"{side}_hand_joint_{i}" for i in range(1, 13)), raw_units="rad",
+        model_joints=tuple(f"{side}_hand_{n}" for n in _XHAND_ORDER), fn=_identity,
+        evidence="github dexoravla/Dexora deploy/xhand_forwarder.py joint index table (0 thumb_bend ... 11 "
+                 "pinky_joint2); dataprocess/airbot_lerobot.py: state = /observation/<side>/joint_state; HF README.",
+    )
+
+
+DEXORA_XHAND_LEFT = _dexora("left")
+DEXORA_XHAND_RIGHT = _dexora("right")
+
 MAPPINGS = {m.mapping_id: m for m in (VITRA_XHAND, REALDEX_SHADOW, H1_INSPIRE_RIGHT, H1_INSPIRE_LEFT,
                                       ROBOMIND_INSPIRE_RIGHT, ROBOMIND_INSPIRE_LEFT,
-                                      HRDEX_DFTP, HRDEX_F1, DEXWILD_LEAP)}
+                                      HRDEX_DFTP, HRDEX_F1, DEXWILD_LEAP,
+                                      TREX_SHARPA_LEFT, TREX_SHARPA_RIGHT,
+                                      DEXORA_XHAND_LEFT, DEXORA_XHAND_RIGHT,
+                                      ORIGAMI_SHARPA_LEFT, ORIGAMI_SHARPA_RIGHT)}

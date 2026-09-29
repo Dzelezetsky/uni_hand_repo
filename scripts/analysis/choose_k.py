@@ -30,6 +30,12 @@ rng = np.random.default_rng(SEED)
 
 hs = pd.read_parquet(UNI / "hand_streams.parquet")
 hs = hs[(hs.canonicalization_status == "ok") & hs.has_time]
+# balance by hand FAMILY (both sides / all datasets of one hand product together); cap streams per family so the
+# large sources (Sharpa ~300 h, XHand ~80 h) do not dominate I/O or the fit (2026-09-30 scaled corpus)
+hs["family"] = hs.hand_family.fillna(hs.hand_model_id)
+MAX_STREAMS = 400
+hs = pd.concat([g.sample(min(len(g), MAX_STREAMS), random_state=SEED) for _, g in hs.groupby("family")])
+print("streams per family:", hs.family.value_counts().to_dict(), flush=True)
 
 
 def feats(P):
@@ -42,12 +48,12 @@ def interp(t, F, tq):
 
 streams = []
 for _, r in hs.iterrows():
-    fr = pd.read_parquet(UNI / r.path)
+    fr = pd.read_parquet(UNI / r.path, columns=["t_s", "valid", "fingertips_palm_norm"])
     fr = fr[fr.valid].sort_values("t_s")
     if len(fr) < 10:
         continue
     P = np.stack(fr.fingertips_palm_norm.to_numpy()).reshape(-1, 5, 3).astype(float)
-    streams.append((r.dataset_id, r.hand_model_id, r.trajectory_group_id + "|" + r.side, fr.t_s.to_numpy(), feats(P)))
+    streams.append((r.dataset_id, r.family, r.trajectory_group_id + "|" + r.side, fr.t_s.to_numpy(), feats(P)))
 
 rows, curves = [], []
 for D in HOR:

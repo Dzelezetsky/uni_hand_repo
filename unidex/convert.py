@@ -34,11 +34,15 @@ from .mappings import MAPPINGS
 
 OUT = REPO / "unified"
 LIMIT_TOL = 0.05  # rad
+V5_TOL = 0.15    # rad, verification criterion V5 (config/verification.yaml)
+GROSS_TOL = 0.3   # rad beyond a URDF limit = physically impossible (e.g. sensor dropout frames) -> valid = False
 
 
 def adapters():
-    from .adapters import actionnet, agibot, dexwild, hrdexdb, humanoid_everyday, realdex, robomind, vitra
-    return {m.DATASET_ID: m for m in (vitra, realdex, humanoid_everyday, hrdexdb, dexwild, robomind, agibot, actionnet)}
+    from .adapters import (actionnet, agibot, dexora, dexwild, hrdexdb, humanoid_everyday, origami, realdex, robomind,
+                           trex, vitra)
+    return {m.DATASET_ID: m for m in (vitra, realdex, humanoid_everyday, hrdexdb, dexwild, robomind, agibot, actionnet,
+                                      trex, dexora, origami)}
 
 
 def _sha(path):
@@ -82,7 +86,7 @@ def canonicalize(h: S.HandStream) -> tuple[dict, pd.DataFrame]:
     frame = pd.DataFrame({"frame_index": np.arange(len(h.t)), "t_s": h.t.astype(float),
                           "native_q": list(np.asarray(h.native_q, float))})
     pad_status = pad_normal_verification(h.hand_model_id)["status"] if spec else None
-    qa = dict(limit_violation_frac=None, max_limit_violation_rad=None, nan_frac=float(np.isnan(h.native_q).mean()))
+    qa = dict(limit_violation_frac=None, max_limit_violation_rad=None, n_invalid_gross_limit=None, limit_violation_frac_v5=None, nan_frac=float(np.isnan(h.native_q).mean()))
     if status == S.CANON_OK:
         hand = load_hand(h.hand_model_id)
         mq = mapping(h.native_q)
@@ -93,7 +97,10 @@ def canonicalize(h: S.HandStream) -> tuple[dict, pd.DataFrame]:
         qa.update(limit_violation_frac=float((viol > LIMIT_TOL).any(1).mean()),
                   max_limit_violation_rad=float(np.nanmax(viol)) if len(viol) else 0.0)
         m, n = hand.canonical(mq, names)
-        valid = np.isfinite(m).all(axis=(1, 2))
+        gross = (viol > GROSS_TOL).any(1)
+        valid = np.isfinite(m).all(axis=(1, 2)) & ~gross
+        qa["n_invalid_gross_limit"] = int(gross.sum())
+        qa["limit_violation_frac_v5"] = float(((viol > V5_TOL) & ~gross[:, None]).any(1).mean())
         frame["model_q"] = list(mq)
         frame["fingertips_palm_m"] = list(m.reshape(len(m), 15).astype(np.float32))
         frame["fingertips_palm_norm"] = list(n.reshape(len(n), 15).astype(np.float32))
@@ -146,10 +153,11 @@ def convert_episode(e: S.Episode, out: Path = OUT) -> tuple[dict, list[dict], li
                          "depth_ref": c.depth_ref, "local": c.local, "fps": c.fps, "width": c.width,
                          "height": c.height, "intrinsics": json.dumps(c.intrinsics) if c.intrinsics else None,
                          "extrinsics": json.dumps(c.extrinsics) if c.extrinsics else None,
-                         "extrinsics_frame": c.extrinsics_frame,
+                         "extrinsics_frame": c.extrinsics_frame, "frame_index_offset": c.frame_index_offset,
                          "n_frames_timed": int(np.isfinite(c.frame_t).sum()) if c.frame_t is not None else 0})
         if c.frame_t is not None:
-            frames.append(pd.DataFrame({"camera_id": c.camera_id, "frame_index": np.arange(len(c.frame_t)),
+            frames.append(pd.DataFrame({"camera_id": c.camera_id,
+                                        "frame_index": c.frame_index_offset + np.arange(len(c.frame_t)),
                                         "t_s": c.frame_t}))
     if frames:
         _write(pd.concat(frames), d / "camera_frames.parquet", base)

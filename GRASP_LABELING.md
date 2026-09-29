@@ -168,3 +168,74 @@ Fraction of hand A's real frames (rows) that hand B (columns) reproduces within 
   hardware range, so this is "not used in HRDexDB", not proven "infeasible". Needs an official F1 range.
 - => the feasibility mask is real and asymmetric: a class learned mainly from Shadow/H1 data may be unreachable for
   F1 (thumb) and DFX (spread fingers). Evaluate every candidate class against this mask.
+
+## Result 2026-09-29 (2): pad normals fail the Rule C admission test
+
+`scripts/analysis/normals_clustering.py` -> `unified/clustering/normals_rule_c.txt`. Verified hands with normals
+(Shadow 5394, F1 7045, DFX-R 1191, DFX-L 212 frames on a 0.2 s grid), hand-balanced, all features z-scored.
+
+| features | dim | mixing ratio (median) | NMI(cluster, hand), k=5 | single-hand clusters |
+|---|---|---|---|---|
+| D  10 pairwise distances | 10 | **2.17** | **0.23** | 0 |
+| D + 10 normal cosines | 20 | 2.75 | 0.33 | 1 |
+| D + thumb normal | 13 | 3.93 | 0.30 | 0 |
+| D + all normals | 25 | 3.50 | 0.29 | 0 |
+| normal cosines only | 10 | 2.55 | 0.35 | 2 |
+
+- Every normal-based set encodes the hand MORE than distances alone; the thumb normal is the worst (thumb gap again).
+- Future information (event windows, D=1 s, x = current D+N for all): classes from D give the best future-distance
+  gain (0.774 vs 0.743–0.745 with normals); classes from D+N improve future-NORMAL prediction (0.636 -> 0.717), i.e.
+  normals add orientation information but only about themselves.
+- Reachability in D+cos (dist RMS < 0.05 pw and cos RMS < 0.1): Inspire hands reproduce only 7–8 % of Shadow's real
+  frames (0.74 with distances only); F1 reproduces 1–14 % of DFX frames. Inspire fingers have no abduction, so their
+  pad normals are almost parallel; normal cosines separate Shadow from Inspire by construction.
+- Note: the D mixing ratio here (2.17) is higher than the 1.21 of the 2026-09-23 study (different hand set: that
+  study included hands now excluded by the strict policy, and a 0.5 s grid). Compare sets only within one run.
+- => Normals are NOT added to the shared vocabulary features (confirms Rule B empirically). Use: per-embodiment
+  continuous target (future pad orientation is predictable, gain 0.72) and analysis. Small-sample caveat: 4 hands,
+  3 datasets, DFX-L only 212 frames; re-run after scaling.
+
+## Result 2026-09-29 (3): clustering on the scaled verified corpus
+
+Data: Inspire F1 591 episodes, Inspire DFX 506 R + 85 L (H1), Shadow 20 (RealDex, 10 objects); 0.2 s grid,
+family-balanced (Shadow / DFX / F1, 4000 each). Features = 10 pairwise distances. Grasp samples = grasp_moments_v1
+(F1 object lifted > 3 cm, 587 episodes; Shadow authors' contact.txt), used only to interpret clusters.
+`scripts/analysis/cluster_v2.py`, `unified/clustering/v2_*` (report, medoid mesh renders), `choose_k.py` rerun.
+
+- Number of classes: future-information knee again at k = 5 (event windows, D = 1 s: k=3 0.79, k=5 0.87, k=8 0.90;
+  per dataset F1 0.75, H1 0.89, RealDex 0.87); KMeans k=5 bootstrap ARI 0.97. => keep k = 5 for
+  `hand_posture_class_v1`.
+- ALL postures, k = 5 (by thumb-index distance, palm widths):
+  1. closed / power (TI 0.96, fingers curled, thumb across) — all three families, Shadow contact 95 %;
+  2. index+middle extended, ring+pinky flexed — DFX 88 % (H1 gesture/free-space), F1 borderline reachable;
+  3. index separated from the curled fingers (IM 1.0) — Shadow 57 % / DFX 29 %;
+  4. semi-flexed fingers, thumb abducted (wide wrap / preshape) — Shadow + F1;
+  5. flat open hand — DFX 83 %; NOT reachable by F1 within its HRDexDB range (fit RMS 0.12 pw, thumb).
+- GRASP samples: clusters follow OBJECT SIZE, consistent with Feix (size is the main variation within a grasp type):
+  k=3: closed wrap on thin objects/handles (banana, whisk, spice mill, frying-pan handle, book; 69 objects, purity
+  0.91) / wide wrap on bulky objects (ramen, tuna can, orange, apple, soap tray + Shadow big_eye_toy; 27 objects,
+  purity 0.75) / index-separated grasp (mostly Shadow). k=5 adds a thin-object pinch-like class (TM 0.44, TI 0.56,
+  F1 95 %) and splits medium (apple, cup, lemon) from large (cans, beer, cylinder) wraps.
+- Pinches exist: 22 % of F1 grasp samples have thumb within 0.35 palm widths of index or middle tip; Shadow 0.5 %
+  (RealDex objects are large). A pinch class is therefore single-embodiment because of DATA COVERAGE, not kinematics
+  (Shadow reproduces every F1 posture, reachability 1.00).
+- => Refine rule 4 above: a single-embodiment cluster is an artefact only if the other hands cannot REACH it
+  (reachability.py); if they can, it is a coverage gap (keep the class, flag it, get data with small objects).
+
+## Result 2026-09-30: clustering on the 388 h corpus (5 hand families)
+
+Families (balanced, 4000 samples each): Sharpa Wave (T-Rex + Origami), XHand1 (Dexora + VITRA), Inspire DFX (H1),
+Inspire F1 (HRDexDB), Shadow (RealDex). `cluster_v2.py` (per-stream sampling), `choose_k.py` (<= 400 streams/family).
+Reports `unified/clustering/v3_report_k7.txt`, gallery `v2_gallery_all_k7.png`.
+
+- Future-information knee still k = 5 (event, D = 1 s: k5 0.85, k8 0.88, k12 0.90); Sharpa datasets gain less
+  (0.63-0.67 at k5 vs 0.75-0.89 elsewhere) -> the 22-DoF hand's variation is not captured by a few classes of 10 distances.
+- With 5 families NO single-family cluster up to k = 8 (3-family data had 2-4). Stability: k5 ARI 0.984, k7 0.987.
+- k = 7 clusters are semantically clean against T-Rex labels (NOT used for clustering):
+  closed power grasp (wrap/fold/peel/pour) · thumb-index pinch with ring+pinky abducted (twist x8, screw x14) ·
+  index separated (coin x8, insert/screw) · index+middle extended, ring+pinky flexed (DFX-heavy; tower of Hanoi x60) ·
+  flat hand, fingers together, thumb abducted (press, keyboard, switch, card) · semi-flexed wide wrap / preshape ·
+  fully open hand (open, reach).
+- F1 cannot reach the open-hand classes (thumb range as used in HRDexDB) -> feasibility mask.
+- Candidate: `hand_posture_class_v1` = KMeans k = 7 on pairwise distances, family-balanced (k = 5 remains the
+  information knee; k = 7 adds precision classes that the new data populate).
