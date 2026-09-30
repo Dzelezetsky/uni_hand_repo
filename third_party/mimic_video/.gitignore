@@ -1,0 +1,7 @@
+# from upstream .gitignore (uv.lock deliberately NOT ignored: we commit our resolved lock for the server)
+model/checkpoints
+nohup.out
+.vscode/
+wandb/
+__pycache__/
+.venv/
