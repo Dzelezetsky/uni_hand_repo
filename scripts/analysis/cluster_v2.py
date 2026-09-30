@@ -43,11 +43,12 @@ FN = "TIMRP"
 FEAT = [f"{FN[i]}{FN[j]}" for i, j in PAIRS]
 FAMILY = {"shadow_e_right_realdex": "Shadow", "inspire_rh56dfx_right_unitree": "DFX",
           "inspire_rh56dfx_left_unitree": "DFX", "inspire_rh56f1_right_hrdexdb": "F1",
-          "xhand1_right": "XHand", "xhand1_left": "XHand", "sharpa_wave_right": "Sharpa", "sharpa_wave_left": "Sharpa"}
-FAMS = ["Shadow", "DFX", "F1", "XHand", "Sharpa"]
+          "xhand1_right": "XHand", "xhand1_left": "XHand", "sharpa_wave_right": "Sharpa", "sharpa_wave_left": "Sharpa",
+          "ruiyan_ryh2_right_egosteer": "Ruiyan", "ruiyan_ryh2_left_egosteer": "Ruiyan"}
+FAMS = ["Shadow", "DFX", "F1", "XHand", "Sharpa", "Ruiyan"]
 FIT_MAPPING = {"Shadow": "realdex__shadow_e_right", "DFX": "humanoid_everyday_h1__inspire_rh56dfx_right",
                "F1": "hrdexdb__inspire_rh56f1_right", "XHand": "dexora__xhand1_right",
-               "Sharpa": "trex__sharpa_wave_right"}
+               "Sharpa": "trex__sharpa_wave_right", "Ruiyan": "egosteer__ruiyan_ryh2_right"}
 POOL = 20000  # samples drawn per family before balancing (per-stream budget = POOL / #streams of that family)
 rng = np.random.default_rng(SEED)
 
@@ -71,6 +72,8 @@ trex_meta = None
 if (hs.dataset_id == "trex").any():
     from unidex.adapters.trex import _meta as _trex_meta
     trex_meta = _trex_meta()[["motor_primitive", "object"]]
+man = pd.read_parquet(UNI / "manifest.parquet", columns=["dataset_id", "source_episode_id", "instruction_original"])
+ego_task = man[man.dataset_id == "egosteer"].set_index("source_episode_id").instruction_original
 rows = []
 for _, r in hs.iterrows():
     fr = pd.read_parquet(UNI / r.path, columns=["frame_index", "t_s", "valid", "fingertips_palm_norm", "model_q"])
@@ -91,7 +94,8 @@ for _, r in hs.iterrows():
                               "primitive": (trex_meta.loc[int(r.source_episode_id.split("_")[-1]), "motor_primitive"]
                                             if r.dataset_id == "trex" else None),
                               "trex_object": (trex_meta.loc[int(r.source_episode_id.split("_")[-1]), "object"]
-                                              if r.dataset_id == "trex" else None)}))
+                                              if r.dataset_id == "trex" else None),
+                              "ego_task": ego_task.get(r.source_episode_id) if r.dataset_id == "egosteer" else None}))
 df = pd.concat(rows, ignore_index=True)
 df["object"] = np.where(df.dataset == "hrdexdb", df.episode.str.split("/").str[1],
                         np.where(df.dataset == "realdex", df.episode.str.split("/").str[0], None))
@@ -205,6 +209,18 @@ def describe(D, X, km, norm, name, k):
                 vc = tc[key].value_counts()
                 enr = (vc / len(tc) / base[vc.index]).where(vc >= 10).dropna().sort_values(ascending=False)
                 L.append(f"  c{c} {key} (n={len(tc)}): " + ", ".join(f"{o} x{e:.1f}" for o, e in enr.head(6).items()))
+    # EgoSteer: task names per cluster (dataset labels, not used for clustering)
+    eg = D.assign(c=lab)[D.dataset.to_numpy() == "egosteer"]
+    if len(eg):
+        L.append("EgoSteer samples per cluster: over-represented tasks (share in cluster / overall, >= 10 samples):")
+        base = eg.ego_task.value_counts(normalize=True)
+        for c in order:
+            ec = eg[eg.c == c]
+            if len(ec) < 20:
+                continue
+            vc = ec.ego_task.value_counts()
+            enr = (vc / len(ec) / base[vc.index]).where(vc >= 10).dropna().sort_values(ascending=False)
+            L.append(f"  c{c} (n={len(ec)}): " + ", ".join(f"{o} x{e:.1f}" for o, e in enr.head(6).items()))
     return L, lab, cent, order
 
 

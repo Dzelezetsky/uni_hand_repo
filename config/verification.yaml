@@ -65,6 +65,36 @@ mappings:
     checks: {V1: pass, V2: inferred_user_accepted, V3: pass, V4: pass_coarse, V5: pass, V6: pass}
     note: "see origami__sharpa_wave_right; V5: 0.16 % > 0.15 rad (middle_DIP, pinky_CMC), max 0.23."
 
+  egosteer__ruiyan_ryh2_right:
+    status: verified
+    checks: {V1: pass, V2: pass, V3: pass, V4: pass, V5: pass, V6: pass}
+    note: "Model = authors' MJCF egosteer/robot-stack@ba06f62 assets/ruiyan_hand_mjcf (6 active + 5 mimic joints).
+      Mapping = authors' hand_fk_node.py: n = state/[0.6,1,1,1,1,1], q = low + n*(high-low), mimic via polycoef.
+      V2 numeric (scripts/analysis/egosteer_fk_check.py): our replay reproduces the shipped FK fingertips
+      state[44:74] to 0.0001 mm in all 10 pairwise tip distances; wrong variants give 3-34 mm. V3: state = motor
+      position feedback /4095. V4 (unified/validation/v4/egosteer__*): FK tips projected into head RGB with the
+      shipped calibration land on the fingers (magnet pinch ep15, gestures ep13722, teapot power grasp ep13030); chest
+      view offsets 1-2 cm = camera calibration. V5: channels bounded by construction, global max 0.61/0.6 on thumb
+      rotation (0.02 rad). V6: 30 Hz nearest-neighbour from native 80 Hz hand stream."
+  egosteer__ruiyan_ryh2_left:
+    status: verified
+    checks: {V1: pass, V2: pass, V3: pass, V4: pass, V5: pass, V6: pass}
+    note: "see egosteer__ruiyan_ryh2_right (left tips reproduced to 0.0001 mm as well)."
+
+  openarm_banana__inspire_rh56f1_right:
+    status: verified
+    checks: {V1: pass, V2: recovered_counts_user_accepted, V3: pass, V4: pass_coarse, V5: pass, V6: pass}
+    note: "Model = HRDexDB F1 URDF (same hand; README mimic multipliers identical). V2 (user decision 2026-09-30): raw
+      F1 counts recovered exactly by inverting the uploader's affines (open counts 1756/1350/1756 from the ep533
+      dropout frames; integer counts in 100 % of floor2/american frames), then the official HRDexDB F1 formula. The
+      uploader's own finger affine (750 counts/rad, self-declared unmeasured) is NOT used: at the mechanical stop it
+      gives 1.148 rad vs 1.473 rad with HRDexDB. Recovered counts span the HRDexDB F1 hardware range (fingers 895-1756 vs
+      896-1746). V5 over 1,072 ep: 0 % > 0.15 rad except the 46 ep533 dropout frames (gross -> valid=False).
+      V4 coarse (unified/validation/v4/openarm_banana__*): grasp/release timing and wrap grasp on the banana in wrist
+      and head cams for floor2 / american / monkey; 640x360 does not resolve the 22 % scale question visually ->
+      the scale decision rests on the count-range evidence. monkey thumb_2 is zero by the uploader's correction.
+      Right hand only (left: parked / grafted, no left F1 model)."
+
   hrdexdb__inspire_rh56dftp_right:
     status: excluded
     checks: {V1: pass, V2: pass, V3: pass, V4: pass, V5: FAIL, V6: pass}

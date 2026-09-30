@@ -34,6 +34,8 @@ NATIVE_RANGES = {
         np.zeros(6), np.ones(6), "Unitree normalization 0..1 (xr_teleoperate robot_hand_inspire.py)"),
     "dexora__xhand1_right": NativeRange(None, None, "URDF joint limits (identity rad mapping)"),
     "trex__sharpa_wave_right": NativeRange(None, None, "URDF joint limits (identity rad mapping)"),
+    "egosteer__ruiyan_ryh2_right": NativeRange(
+        np.zeros(6), np.array([0.6, 1, 1, 1, 1, 1.0]), "RY-H2 motor range of the authors' FK (robot-stack hand_fk_node.py)"),
     "hrdexdb__inspire_rh56f1_right": NativeRange(
         None, None, "data-observed p0.5..p99.5 per channel over the unified store (no official F1 range at hand): "
                     "reach AS USED in HRDexDB, may underestimate the hardware range"),

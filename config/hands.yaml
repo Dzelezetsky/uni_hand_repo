@@ -153,6 +153,42 @@ hand_models:
       ring: {link: ring_tip}
       pinky: {link: little_tip}
 
+  ruiyan_ryh2_right_egosteer:
+    family: ruiyan_ryh2
+    side: right
+    urdf: external_hand_models/egosteer_ruiyan/ruiyan_hand_mjcf/right/ruiyan_ryh2_right.urdf
+    model_source: https://github.com/egosteer/robot-stack (assets/ruiyan_hand_mjcf/right/hand.xml @ba06f62, converted by
+      scripts/models/mjcf_to_urdf_ruiyan.py; coupling as in the authors' hand_fk_node.py). URDF FK == shipped fingertips.
+    model_status: dataset_author_model
+    palm_link: hand2_link_base
+    wrist_frame: hand2_link_base
+    finger_base_joints: {index: hand2_joint_link_2_1, middle: hand2_joint_link_3_1,
+                         ring: hand2_joint_link_4_1, pinky: hand2_joint_link_5_1}
+    tips:
+      thumb: {link: right_thumb_tip}
+      index: {link: right_index_tip}
+      middle: {link: right_middle_tip}
+      ring: {link: right_ring_tip}
+      pinky: {link: right_pinky_tip}
+
+  ruiyan_ryh2_left_egosteer:
+    family: ruiyan_ryh2
+    side: left
+    urdf: external_hand_models/egosteer_ruiyan/ruiyan_hand_mjcf/left/ruiyan_ryh2_left.urdf
+    model_source: https://github.com/egosteer/robot-stack (assets/ruiyan_hand_mjcf/left/hand.xml @ba06f62, converted by
+      scripts/models/mjcf_to_urdf_ruiyan.py; coupling as in the authors' hand_fk_node.py). URDF FK == shipped fingertips.
+    model_status: dataset_author_model
+    palm_link: hand1_link_base
+    wrist_frame: hand1_link_base
+    finger_base_joints: {index: hand1_joint_link_2_1, middle: hand1_joint_link_3_1,
+                         ring: hand1_joint_link_4_1, pinky: hand1_joint_link_5_1}
+    tips:
+      thumb: {link: left_thumb_tip}
+      index: {link: left_index_tip}
+      middle: {link: left_middle_tip}
+      ring: {link: left_ring_tip}
+      pinky: {link: left_pinky_tip}
+
   fourier_fdh6_right:
     family: fourier_fdh6
     side: right

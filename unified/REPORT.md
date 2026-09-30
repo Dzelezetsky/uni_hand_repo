@@ -8,17 +8,26 @@ Strict policy (config/verification.yaml): geometry is stored ONLY for fully veri
 
 | dataset | hand | hand_model_id | model_status | state_source | episodes | samples | reason |
 |---|---|---|---|---|---|---|---|
-| realdex | shadow_dexterous_hand_e/right | shadow_e_right_realdex | dataset_author_model | measured_joint | 9 | 16179 |  |
-| humanoid_everyday_h1 | inspire_rh56dfx/right | inspire_rh56dfx_right_unitree | integrator_official | measured_actuator | 20 | 7108 | Unitree (robot integrator) URDF + Unitree normalization; H1 hand = RH56DFX per Unitree DFX_inspire_service |
-| humanoid_everyday_h1 | inspire_rh56dfx/left | inspire_rh56dfx_left_unitree | integrator_official | measured_actuator | 3 | 1262 |  |
-| hrdexdb | inspire_rh56f1/right | inspire_rh56f1_right_hrdexdb | dataset_author_model | measured_actuator | 68 | 70165 |  |
+| realdex | shadow_dexterous_hand_e/right | shadow_e_right_realdex | dataset_author_model | measured_joint | 20 | 35956 |  |
+| humanoid_everyday_h1 | inspire_rh56dfx/right | inspire_rh56dfx_right_unitree | integrator_official | measured_actuator | 4877 | 1657644 | Unitree (robot integrator) URDF + Unitree normalization; H1 hand = RH56DFX per Unitree DFX_inspire_service |
+| humanoid_everyday_h1 | inspire_rh56dfx/left | inspire_rh56dfx_left_unitree | integrator_official | measured_actuator | 760 | 266201 |  |
+| hrdexdb | inspire_rh56f1/right | inspire_rh56f1_right_hrdexdb | dataset_author_model | measured_actuator | 591 | 629316 |  |
+| trex | sharpa_wave/right | sharpa_wave_right | exact_official | measured_joint | 5464 | 5473459 | Official Sharpa wave_01 URDF (byte-identical to the T-Rex vendored copy); joint order = authors' schema.py (authors verified it manually against the data); state = measured joint positions. V5: 0.004% samples > 0.15 rad. V4 (2026-09-29, unified/validation/v4/trex__*): closure timing matches grasp/release in head + wrist cameras, idle hand open and static; finger-level detail not resolvable at 640x360 -> coarse pass. Revoke if a finer check fails. |
+| trex | sharpa_wave/left | sharpa_wave_left | exact_official | measured_joint | 5464 | 5473459 | see trex__sharpa_wave_right; V5: 0.016% samples > 0.15 rad. |
+| dexora | xhand1/right | xhand1_right | exact_official | measured_joint | 11513 | 2918189 | XHand1 = RobotEra STAR1 model; order = Dexora deploy/xhand_forwarder.py; state = /observation joint_state. V4 (unified/validation/v4/dexora__*): ep 50 straight-finger hook matches static hand, ep 300 left power grasp on ukulele neck + release. V5 over all 11,517 ep: 0 % > 0.15 rad (max 0.12), 2.7 % > 0.05 (joint2 near limit). |
+| dexora | xhand1/left | xhand1_left | exact_official | measured_joint | 11514 | 2918299 | see dexora__xhand1_right; V5: 0 % > 0.15 rad (max 0.14), 5.7 % > 0.05 (mostly ring_joint2). |
+| sharpa_origami | sharpa_wave/right | sharpa_wave_right | exact_official | measured_joint | 1813 | 10786104 | Official Sharpa wave_01 model. Channel order j0..j21 not documented by Sharpa: inferred = URDF/T-Rex order because every channel's range fits its joint's URDF limits (user accepted 2026-09-30). V4 coarse (both hands in pinch postures on the paper throughout the fold, 640-px head cam). V5 over 1,813 ep: 0.017 % > 0.15 rad. |
+| sharpa_origami | sharpa_wave/left | sharpa_wave_left | exact_official | measured_joint | 1813 | 10786104 | see origami__sharpa_wave_right; V5: 0.16 % > 0.15 rad (middle_DIP, pinky_CMC), max 0.23. |
+| egosteer | ruiyan_ryh2/right | ruiyan_ryh2_right_egosteer | dataset_author_model | measured_actuator | 44181 | 17669171 | Model = authors' MJCF egosteer/robot-stack@ba06f62 assets/ruiyan_hand_mjcf (6 active + 5 mimic joints). Mapping = authors' hand_fk_node.py: n = state/[0.6,1,1,1,1,1], q = low + n*(high-low), mimic via polycoef. V2 numeric (scripts/analysis/egosteer_fk_check.py): our replay reproduces the shipped FK fingertips state[44:74] to 0.0001 mm in all 10 pairwise tip distances; wrong variants give 3-34 mm. V3: state = motor position feedback /4095. V4 (unified/validation/v4/egosteer__*): FK tips projected into head RGB with the shipped calibration land on the fingers (magnet pinch ep15, gestures ep13722, teapot power grasp ep13030); chest view offsets 1-2 cm = camera calibration. V5: channels bounded by construction, global max 0.61/0.6 on thumb rotation (0.02 rad). V6: 30 Hz nearest-neighbour from native 80 Hz hand stream. |
+| egosteer | ruiyan_ryh2/left | ruiyan_ryh2_left_egosteer | dataset_author_model | measured_actuator | 44914 | 18011845 | see egosteer__ruiyan_ryh2_right (left tips reproduced to 0.0001 mm as well). |
+| openarm_banana | inspire_rh56f1/right | inspire_rh56f1_right_hrdexdb | dataset_author_model | measured_actuator | 1072 | 234978 | Model = HRDexDB F1 URDF (same hand; README mimic multipliers identical). V2 (user decision 2026-09-30): raw F1 counts recovered exactly by inverting the uploader's affines (open counts 1756/1350/1756 from the ep533 dropout frames; integer counts in 100 % of floor2/american frames), then the official HRDexDB F1 formula. The uploader's own finger affine (750 counts/rad, self-declared unmeasured) is NOT used: at the mechanical stop it gives 1.148 rad vs 1.473 rad with HRDexDB. Recovered counts span the HRDexDB F1 hardware range (fingers 895-1756 vs 896-1746). V5 over 1,072 ep: 0 % > 0.15 rad except the 46 ep533 dropout frames (gross -> valid=False). V4 coarse (unified/validation/v4/openarm_banana__*): grasp/release timing and wrap grasp on the banana in wrist and head cams for floor2 / american / monkey; 640x360 does not resolve the 22 % scale question visually -> the scale decision rests on the count-range evidence. monkey thumb_2 is zero by the uploader's correction. Right hand only (left: parked / grafted, no left F1 model). |
+| vitra_teledata | xhand1/right | xhand1_right | exact_official | measured_joint | 20 | 4807 | V1 re-evaluated 2026-09-29 (user decision): official RobotEra STAR1 URDF, hand identical to the SPIDER model. |
 
 ## 2. EXCLUDED — model and mapping exist, but not 100% verified (native data only)
 
 | dataset | hand | hand_model_id | model_status | state_source | verification | failed_checks | episodes | samples | reason |
 |---|---|---|---|---|---|---|---|---|---|
 | hrdexdb | inspire_rh56dftp/right | inspire_rh56dftp_right_hrdexdb | dataset_author_model | measured_actuator | excluded | V5 | 10 | 13775 | authors' thumb-rotation conversion reaches 1.40 rad but their URDF limit is 1.15 rad (16% of samples): conversion and model are inconsistent, the thumb-yaw scale of every frame is in doubt. Re-include once resolved (e.g. confirmation from the HRDexDB authors). |
-| vitra_teledata | xhand1/right | xhand1_right | third_party_candidate | measured_joint | excluded | V1 | 20 | 4807 | URDF is third-party (facebookresearch/spider); no official RobotEra XHand1 model found. Re-include with an official model. |
 | dexwild_robot | leap_hand_v2_advanced/right | leap_v2_adv_right | exact_official | command | excluded | V3,V5 | 15 | 4941 | only commanded joint targets (IK solution of glove retargeting) are stored; IK ran without joint limits. |
 | robomind_tienkung | inspire_rh56dfx/right | inspire_rh56dfx_right_unitree | integrator_official | unknown | excluded | V2,V3,V6 | 16 | 9265 | Unitree normalization applied to RoboMIND data is our assumption (not RoboMIND code); puppet == master bit-identical (state source unknown); no timestamps / recording rate. |
 | robomind_tienkung | inspire_rh56dfx/left | inspire_rh56dfx_left_unitree | integrator_official | unknown | excluded | V2,V3,V6 | 16 | 9265 | see robomind_xsens__inspire_rh56dfx_right |
@@ -32,7 +41,6 @@ Strict policy (config/verification.yaml): geometry is stored ONLY for fully veri
 | fourier_actionnet/fourier_fdh12 | NOT PROCESSED: no public FDH-12 model. | 60 |
 | agibot_world_dexhand/agibot_g1_dexhand | NOT PROCESSED: no public hand model. | 158 |
 | robomind_tienkung/inspire_rh56dfx_gello | NOT PROCESSED: 1D closure only. | 42 |
-| vitra_teledata/xhand1_left | left arm/hand not present in the released VITRA data | 0 |
 | robotacdex/brainco_revo2 | model ready, dataset not public | 0 |
 
 ## 3. Sample corpus per dataset
@@ -40,13 +48,18 @@ Strict policy (config/verification.yaml): geometry is stored ONLY for fully veri
 | dataset | episodes | hours | text | annotation_source | cameras_per_ep | cameras_local | depth | tactile | contact_labels | hand_streams | canonical_ok |
 |---|---|---|---|---|---|---|---|---|---|---|---|
 | agibot_world_dexhand | 79 | 1.526 | 100% | dataset | 8.0 | 0.3 | False | False | False | 158 | 0 |
+| dexora | 11517 | 40.383 | 63% | dataset,none | 4.0 | 0.0 | False | False | False | 23034 | 23027 |
 | dexwild_robot | 15 | 0.046 | 0% | none | 2.0 | 0.3 | False | False | False | 15 | 0 |
+| egosteer | 54454 | 191.632 | 100% | dataset | 2.0 | 0.0 | True | False | False | 108908 | 89095 |
 | fourier_actionnet | 30 | 0.16 | 40% | dataset,none | 1.0 | 1.0 | False | False | False | 60 | 0 |
-| hrdexdb | 78 | 0.481 | 0% | none | 22.9 | 1.8 | False | True | False | 78 | 68 |
-| humanoid_everyday_h1 | 20 | 0.066 | 100% | dataset | 1.0 | 1.0 | False | False | False | 40 | 23 |
-| realdex | 9 | 0.299 | 0% | none | 4.0 | 4.0 | True | False | True | 9 | 9 |
+| hrdexdb | 601 | 3.664 | 0% | none | 23.0 | 1.1 | False | True | False | 601 | 591 |
+| humanoid_everyday_h1 | 4883 | 15.319 | 100% | dataset | 1.0 | 1.0 | False | False | False | 9766 | 5637 |
+| openarm_banana | 1072 | 3.249 | 100% | dataset | 4.0 | 0.5 | False | False | False | 2144 | 1072 |
+| realdex | 20 | 0.666 | 0% | none | 4.0 | 1.8 | True | False | True | 20 | 20 |
 | robomind_tienkung | 21 | 0.0 | 100% | dataset | 1.0 | 1.0 | True | False | False | 42 | 0 |
-| vitra_teledata | 20 | 0.044 | 100% | dataset | 1.0 | 1.0 | False | False | False | 20 | 0 |
+| sharpa_origami | 1813 | 99.855 | 100% | template | 4.0 | 0.0 | False | True | False | 3626 | 3626 |
+| trex | 5464 | 50.63 | 100% | dataset | 3.0 | 0.0 | False | True | False | 10928 | 10928 |
+| vitra_teledata | 20 | 0.044 | 100% | dataset | 1.0 | 1.0 | False | False | False | 20 | 20 |
 
 ## 4. Canonicalization status per hand stream
 
@@ -54,23 +67,38 @@ Strict policy (config/verification.yaml): geometry is stored ONLY for fully veri
 |---|---|---|---|
 | agibot_world_dexhand | left | missing_exact_hand_model | 79 |
 | agibot_world_dexhand | right | missing_exact_hand_model | 79 |
+| dexora | left | hand_not_used_in_episode | 3 |
+| dexora | left | ok | 11514 |
+| dexora | right | hand_not_used_in_episode | 4 |
+| dexora | right | ok | 11513 |
 | dexwild_robot | right | excluded_not_verified | 15 |
+| egosteer | left | hand_not_used_in_episode | 9540 |
+| egosteer | left | ok | 44914 |
+| egosteer | right | hand_not_used_in_episode | 10273 |
+| egosteer | right | ok | 44181 |
 | fourier_actionnet | left | hand_not_used_in_episode | 1 |
 | fourier_actionnet | left | missing_exact_hand_model | 12 |
 | fourier_actionnet | left | missing_joint_mapping | 17 |
 | fourier_actionnet | right | missing_exact_hand_model | 12 |
 | fourier_actionnet | right | missing_joint_mapping | 18 |
 | hrdexdb | right | excluded_not_verified | 10 |
-| hrdexdb | right | ok | 68 |
-| humanoid_everyday_h1 | left | hand_not_used_in_episode | 17 |
-| humanoid_everyday_h1 | left | ok | 3 |
-| humanoid_everyday_h1 | right | ok | 20 |
-| realdex | right | ok | 9 |
+| hrdexdb | right | ok | 591 |
+| humanoid_everyday_h1 | left | hand_not_used_in_episode | 4123 |
+| humanoid_everyday_h1 | left | ok | 760 |
+| humanoid_everyday_h1 | right | hand_not_used_in_episode | 6 |
+| humanoid_everyday_h1 | right | ok | 4877 |
+| openarm_banana | left | missing_exact_hand_model | 1072 |
+| openarm_banana | right | ok | 1072 |
+| realdex | right | ok | 20 |
 | robomind_tienkung | left | excluded_not_verified | 16 |
 | robomind_tienkung | left | missing_joint_mapping | 5 |
 | robomind_tienkung | right | excluded_not_verified | 16 |
 | robomind_tienkung | right | missing_joint_mapping | 5 |
-| vitra_teledata | right | excluded_not_verified | 20 |
+| sharpa_origami | left | ok | 1813 |
+| sharpa_origami | right | ok | 1813 |
+| trex | left | ok | 5464 |
+| trex | right | ok | 5464 |
+| vitra_teledata | right | ok | 20 |
 
 ## 5. Cross-embodiment check
 

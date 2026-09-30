@@ -144,6 +144,51 @@ HRDEX_F1 = HandMapping(
              "(raw/hand/right_joint_states.npy), URDF xarm_inspire_f1_right.urdf shipped with the dataset.",
 )
 
+# OpenArm Banana 1072 (June777/openarm_banana_all_1072episodes): same Inspire RH56F1 hand and URDF as HRDexDB F1 (the
+# README's mimic multipliers 1.2953 / 0.8962 / 1.1545 are those of xarm_inspire_f1_right.urdf). The release stores
+# (open_counts - raw) / counts_per_rad with the uploader's affines (thumb_1 552, thumb_2 529, fingers 750 counts/rad,
+# the latter "still unmeasured"). The adapter inverts that exactly to the F1 ANGLEACT counts (open counts 1756 / 1350 /
+# 1756 read from the ep533 feedback-dropout frames; inverted values are integers in 100 % of the non-resampled
+# frames), and the official HRDexDB F1 conversion is applied to the counts (user decision 2026-09-30).
+BANANA_OPEN_COUNTS = np.array([1756.0, 1350.0, 1756.0, 1756.0, 1756.0, 1756.0])
+BANANA_COUNTS_PER_RAD = np.array([552.0, 529.0, 750.0, 750.0, 750.0, 750.0])
+BANANA_F1 = HandMapping(
+    mapping_id="openarm_banana__inspire_rh56f1_right", version="1.0", hand_model_id="inspire_rh56f1_right_hrdexdb",
+    raw_names=("thumb_1", "thumb_2", "index_1", "middle_1", "ring_1", "little_1"), raw_units="rad_uploader_affine",
+    model_joints=_HRDEX_JOINTS, fn=lambda x: _f1(BANANA_OPEN_COUNTS - x * BANANA_COUNTS_PER_RAD),
+    evidence="raw F1 counts recovered from the release by inverting the uploader's documented affines "
+             "(build_all_1072.py, README); conversion = snuvclab/HRDexDB inspire_f1_action_to_qpos_dof6 for the same "
+             "hand/URDF. Recovered counts span the HRDexDB F1 hardware range (fingers 895-1756 vs 896-1746).",
+)
+
+# ---------------------------------------------------------------- EgoSteer-RealWorld / Ruiyan RY-H2 (both hands)
+# observation.state[14:20] (left) / [20:26] (right) = motor position / 4095 of thumb rotation, thumb bend, index,
+# middle, ring, pinky. Conversion verbatim from egosteer/robot-stack src/hand/hand/hand_fk_node.py compute_fk:
+# n = clip(x / [0.6, 1, 1, 1, 1, 1], 0, 1); q = low + n * (high - low) with the MJCF joint ranges (identical L/R).
+_RUIYAN_MULT = np.array([0.6, 1.0, 1.0, 1.0, 1.0, 1.0])
+_RUIYAN_HIGH = np.array([1.4136, 0.698, 1.518, 1.5709999, 1.5709999, 1.5449999])  # lows are all 0
+
+
+def _ruiyan(x):
+    return np.clip(x / _RUIYAN_MULT, 0.0, 1.0) * _RUIYAN_HIGH
+
+
+def _egosteer(side):
+    p = "hand1" if side == "left" else "hand2"
+    return HandMapping(
+        mapping_id=f"egosteer__ruiyan_ryh2_{side}", version="1.0", hand_model_id=f"ruiyan_ryh2_{side}_egosteer",
+        raw_names=tuple(f"{p}_joint_link_{k}" for k in ("1_1", "1_2", "2_1", "3_1", "4_1", "5_1")),
+        raw_units="ruiyan_motor_0_1", model_joints=tuple(f"{p}_joint_link_{k}" for k in ("1_1", "1_2", "2_1", "3_1",
+                                                                                          "4_1", "5_1")),
+        fn=_ruiyan,
+        evidence="egosteer/robot-stack@ba06f62 hand_fk_node.py (MOTOR_POSITION_MULTIPLIER, low + n*range) and "
+                 "hand_control_node.py (state = motor position / 4095); reproduces the dataset's FK fingertips "
+                 "state[44:74] to < 0.04 mm (scripts/analysis/egosteer_fk_check.py).",
+    )
+
+
+EGOSTEER_LEFT, EGOSTEER_RIGHT = _egosteer("left"), _egosteer("right")
+
 # ---------------------------------------------------------------- DexWild robot / LEAP Hand V2 Advanced (right)
 # Stored stream right_leapv2 = ROS topic /leapv2_node/cmd_raw_leap_r (col 0 = timestamp). It is produced by
 # dexwild_ros2 retargeting/leap_v2_ik.py: PyBullet IK on the SAME robot.urdf (byte-identical), then
@@ -241,7 +286,8 @@ DEXORA_XHAND_RIGHT = _dexora("right")
 
 MAPPINGS = {m.mapping_id: m for m in (VITRA_XHAND, REALDEX_SHADOW, H1_INSPIRE_RIGHT, H1_INSPIRE_LEFT,
                                       ROBOMIND_INSPIRE_RIGHT, ROBOMIND_INSPIRE_LEFT,
-                                      HRDEX_DFTP, HRDEX_F1, DEXWILD_LEAP,
+                                      HRDEX_DFTP, HRDEX_F1, BANANA_F1, EGOSTEER_LEFT, EGOSTEER_RIGHT,
+                                      DEXWILD_LEAP,
                                       TREX_SHARPA_LEFT, TREX_SHARPA_RIGHT,
                                       DEXORA_XHAND_LEFT, DEXORA_XHAND_RIGHT,
                                       ORIGAMI_SHARPA_LEFT, ORIGAMI_SHARPA_RIGHT)}

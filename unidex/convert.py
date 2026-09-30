@@ -39,10 +39,10 @@ GROSS_TOL = 0.3   # rad beyond a URDF limit = physically impossible (e.g. sensor
 
 
 def adapters():
-    from .adapters import (actionnet, agibot, dexora, dexwild, hrdexdb, humanoid_everyday, origami, realdex, robomind,
-                           trex, vitra)
+    from .adapters import (actionnet, agibot, dexora, dexwild, egosteer, hrdexdb, humanoid_everyday, openarm_banana,
+                           origami, realdex, robomind, trex, vitra)
     return {m.DATASET_ID: m for m in (vitra, realdex, humanoid_everyday, hrdexdb, dexwild, robomind, agibot, actionnet,
-                                      trex, dexora, origami)}
+                                      trex, dexora, origami, openarm_banana, egosteer)}
 
 
 def _sha(path):

@@ -1,0 +1,79 @@
+Posture / grasp clustering v2 (10 pairwise distances, palm widths; KMeans, family-balanced)
+
+[ALL postures] n=24000 per family {'DFX': 4000, 'F1': 4000, 'Ruiyan': 4000, 'Shadow': 4000, 'Sharpa': 4000, 'XHand': 4000}
+  k   silh  stabARI  NMIfam  1-fam   min%
+  2  0.315    0.989   0.020      0  42.2%
+  3  0.308    0.981   0.039      0  15.1%
+  4  0.331    0.986   0.049      0   7.6%
+  5  0.276    0.979   0.143      0   6.2%
+  6  0.280    0.860   0.207      0   6.1%
+  7  0.290    0.983   0.203      0   3.5%
+  8  0.292    0.976   0.208      0   2.1%
+  9  0.273    0.847   0.205      0   2.1%
+ 10  0.274    0.894   0.206      0   2.0%
+ 11  0.249    0.919   0.211      0   2.0%
+ 12  0.253    0.858   0.210      0   1.5%
+
+[GRASP samples (F1 lifted, Shadow contact)] n=3753 per family {'Shadow': 3000, 'F1': 753}
+  k   silh  stabARI  NMIfam  1-fam   min%
+  2  0.303    0.963   0.100      0  43.6%
+  3  0.319    0.965   0.095      0  14.8%
+  4  0.260    0.828   0.082      1  12.9%
+  5  0.256    0.859   0.194      2  12.6%
+  6  0.268    0.918   0.201      3   2.1%
+  7  0.264    0.912   0.187      4   2.0%
+  8  0.239    0.876   0.176      5   2.0%
+  9  0.236    0.887   0.173      5   2.0%
+ 10  0.238    0.853   0.173      5   1.0%
+ 11  0.242    0.729   0.169      7   1.2%
+ 12  0.239    0.647   0.163      7   1.0%
+
+=== ALL postures, k=7  (clusters sorted by thumb-index distance; distances in palm widths)
+ c    TI    TM    TR    TP    IM    IR    IP    MR    MP    RP  | family share (balanced) | interaction rate | reachable (RMS pw)
+ 5  0.76  1.18  1.39  1.52  1.27  1.54  1.67  0.47  0.79  0.40  | Shadow:0.10 DFX:0.07 F1:0.07 XHand:0.05 Sharpa:0.29 Ruiyan:0.43 | Shadow:1.00 F1:0.11 | Shadow:0.007 DFX:0.021 F1:0.013 XHand:0.010 Sharpa:0.007 Ruiyan:0.018
+ 1  0.78  0.78  0.97  1.17  0.46  0.84  1.14  0.44  0.77  0.41  | Shadow:0.16 DFX:0.07 F1:0.29 XHand:0.19 Sharpa:0.16 Ruiyan:0.14 | Shadow:0.97 F1:0.19 | Shadow:0.008 DFX:0.021 F1:0.026 XHand:0.010 Sharpa:0.008 Ruiyan:0.024
+ 6  0.89  0.95  1.14  1.53  0.50  0.90  1.56  0.51  1.28  0.89  | Shadow:0.13 DFX:0.17 F1:0.20 XHand:0.08 Sharpa:0.24 Ruiyan:0.18 | Shadow:0.97 F1:0.23 | Shadow:0.010 DFX:0.021 F1:0.023 XHand:0.013 Sharpa:0.010 Ruiyan:0.024
+ 2  0.97  0.97  1.05  1.35  0.53  1.35  1.72  1.14  1.51  0.60  | Shadow:0.01 DFX:0.51 F1:0.13 XHand:0.06 Sharpa:0.15 Ruiyan:0.14 | Shadow:0.18 F1:0.21 | Shadow:0.021 DFX:0.039 F1:0.049 XHand:0.024 Sharpa:0.024 Ruiyan:0.048
+ 3  1.64  1.81  1.98  2.13  0.31  0.62  0.93  0.33  0.65  0.36  | Shadow:0.02 DFX:0.02 F1:0.00 XHand:0.62 Sharpa:0.33 Ruiyan:0.00 | Shadow:0.71 F1:0.00 | Shadow:0.003 DFX:0.019 F1:0.125! XHand:0.003 Sharpa:0.003 Ruiyan:0.077!
+ 0  1.65  1.70  1.76  1.85  0.50  0.89  1.31  0.45  0.92  0.50  | Shadow:0.37 DFX:0.05 F1:0.25 XHand:0.04 Sharpa:0.09 Ruiyan:0.21 | Shadow:0.59 F1:0.03 | Shadow:0.005 DFX:0.014 F1:0.017 XHand:0.007 Sharpa:0.005 Ruiyan:0.008
+ 4  2.12  2.31  2.45  2.57  0.41  0.79  1.19  0.41  0.83  0.43  | Shadow:0.05 DFX:0.57 F1:0.08 XHand:0.06 Sharpa:0.08 Ruiyan:0.16 | Shadow:0.45 F1:0.02 | Shadow:0.001 DFX:0.007 F1:0.111! XHand:0.002 Sharpa:0.001 Ruiyan:0.024
+objects by majority cluster of their GRASP samples (purity = share in that cluster; >= 10 samples):
+  c5: 0 objects, purity median nan: 
+  c1: 2 objects, purity median 0.53: bathroom_cleaner(S) 0.55, body_wash(S) 0.51
+  c6: 0 objects, purity median nan: 
+  c2: 0 objects, purity median nan: 
+  c3: 0 objects, purity median nan: 
+  c0: 8 objects, purity median 0.57: big_eye_toy(S) 0.89, beer(S) 0.85, cylinder(S) 0.78, air_duster(S) 0.59, body_lotion(S) 0.55, big_detergent(S) 0.47, box(S) 0.43, blue_cup(S) 0.37
+  c4: 0 objects, purity median nan: 
+T-Rex samples per cluster: over-represented motor primitives / objects (share in cluster / overall):
+  c5 primitive (n=160): insert x4.4, extract x2.2, fold x1.6, press x1.2, wrap x1.1, lift_and_place x0.7
+  c1 primitive (n=510): wrap x2.1, screw x2.0, peel x1.9, fold x1.9, wipe x1.8, shake x1.7
+  c6 primitive (n=120): cut x4.9, wrap x1.1, lift_and_place x1.1, grasp_and_lifting x0.8, reach x0.6
+  c2 primitive (n=76): twist x9.2, assemble x9.0
+  c3 primitive (n=1213): press x1.6, grasp_and_lifting x1.5, squeeze x1.4, pour x1.3, lift_and_place x1.3, reach x1.2
+  c0 primitive (n=610): twist x2.2, close x2.1, fold x1.7, wrap x1.7, open x1.3, reach x1.3
+  c4 primitive (n=313): reach x2.1, open x2.0, cut x1.4, press x1.2, lift_and_place x1.1, grasp_and_lifting x1.0
+  c5 trex_object (n=160): coin x7.7, airpods case & airpods x6.3
+  c1 trex_object (n=510): bandage x2.9, adhesive wrap x2.5, whiteboard x2.4, backpack x2.0, muslin x2.0, ethernet cable x1.8
+  c6 trex_object (n=120): 
+  c2 trex_object (n=76): toy tower of hanoi x36.9, screw x15.8, glue stick x9.0
+  c3 trex_object (n=1213): gel pad x2.5, package x2.2, card x2.0, bucket x2.0, switch on off x1.9, keyboard x1.9
+  c0 trex_object (n=610): puzzle pieces x3.5, muslin x1.8, whiteboard x1.6, aluminum foil x1.6, books x1.5, shorts x1.4
+  c4 trex_object (n=313): shoes x6.9, hand sanitizer x5.2, dispenser bottle x2.5, shorts x2.3
+EgoSteer samples per cluster: over-represented tasks (share in cluster / overall, >= 10 samples):
+  c5 (n=854): Pick Up the Magnet x3.4, Straighten the Rope x3.3, Untie the Bow x3.2, Press the Power Strip Switch x3.1, Roll the Die x3.1, Flatten the Towel x2.9
+  c1 (n=689): Strike the Sponge with a Hammer x3.9, Put the Toothpaste into the Toothpaste Box x3.9, Pour Water into the Cup x3.5, Wipe the Spill with a Cloth x3.4, Squeeze the Squeaky Chicken x3.2, Wind the Rope x2.8
+  c6 (n=222): Cross the Drumsticks in the Air x6.7
+  c2 (n=118): 
+  c0 (n=1425): Spin the Globe x2.8, Push the Object onto the Specified Color Region x2.5, Close the Laptop Stand x2.5, Open the Laptop x2.4, Weigh the Object x2.2, Open the Trash Can x2.0
+  c4 (n=691): Lay Out the Placemat x3.1, Put the Orange into the Basket x2.7, Place the Mouse on the Mouse Pad x2.4, Put Items into the Paper Box x2.4, Close the Toothpaste Cap x2.4, Stand the Shuttlecock Upright x2.2
+
+=== GRASP samples, k=3  (clusters sorted by thumb-index distance; distances in palm widths)
+ c    TI    TM    TR    TP    IM    IR    IP    MR    MP    RP  | family share (balanced) | interaction rate | reachable (RMS pw)
+ 1  0.96  0.87  0.99  1.14  0.45  0.81  1.09  0.41  0.71  0.39  | Shadow:0.28 F1:0.72 | Shadow:1.00 F1:1.00 | Shadow:0.007 DFX:0.021 F1:0.031 XHand:0.011 Sharpa:0.007 Ruiyan:0.035
+ 2  1.66  1.61  1.69  1.90  0.50  0.89  1.39  0.46  0.99  0.56  | Shadow:0.75 F1:0.25 | Shadow:1.00 F1:1.00 | Shadow:0.004 DFX:0.012 F1:0.029 XHand:0.005 Sharpa:0.004 Ruiyan:0.032
+ 0  1.76  1.22  1.24  1.40  0.94  1.25  1.44  0.45  0.78  0.39  | Shadow:0.73 F1:0.27 | Shadow:1.00 F1:1.00 | Shadow:0.004 DFX:0.033 F1:0.040 XHand:0.007 Sharpa:0.004 Ruiyan:0.025
+objects by majority cluster of their GRASP samples (purity = share in that cluster; >= 10 samples):
+  c1: 29 objects, purity median 1.00: balloon_whisk(F) 1.00, baseball(F) 1.00, black_holder_with_handle(F) 1.00, frog_bowl(F) 1.00, circular_frying_pan(F) 1.00, frame_red(F) 1.00, colander_green(F) 1.00, thermo_clock(F) 1.00, yellow_wash_tub(F) 1.00, icecream_scoop(F) 1.00, pastel_blue_cup(F) 1.00, green_cactus_vase(F) 1.00
+  c2: 12 objects, purity median 0.58: jja_ramen(F) 1.00, pepper_tuna(F) 0.73, big_eye_toy(S) 0.72, cylinder(S) 0.70, beer(S) 0.66, air_duster(S) 0.60, body_lotion(S) 0.56, brown_ramen(F) 0.55, grey_pot(F) 0.53, box(S) 0.53, big_detergent(S) 0.48, blue_cup(S) 0.41
+  c0: 0 objects, purity median nan: 

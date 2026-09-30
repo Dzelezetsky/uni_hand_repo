@@ -76,3 +76,31 @@ V4 (visual FK vs RGB) and V5 (limits) need a downloaded sample and are open for 
   ~10.8 M frames per hand (~100 h).
 - Dexora: **verified and converted** — 11,517 episodes, 80.7 h of XHand streams, V5 0 % > 0.15 rad.
 - Origami: **verified** (V2 inferred + user-accepted, V4 coarse), V5 0.017 % (R) / 0.16 % (L) > 0.15 rad; converted.
+
+## Correction 2026-09-30: EgoSteer-RealWorld moves from Tier C to Tier A
+
+The Tier C verdict was wrong (based on the summary in new_datasets.md, not on the authors' code). The official
+`egosteer/robot-stack` (commit ba06f62) ships the RY-H2 MJCF (`assets/ruiyan_hand_mjcf/{left,right}/hand.xml`, 6 active
++ mimic joints via `<equality polycoef>`), and `src/hand/hand/hand_fk_node.py` gives the authors' conversion:
+state = motor_position/4095; `n = state / [0.6,1,1,1,1,1]`; `q = low + n * (high - low)` per MJCF joint range; mimic
+joints from the equality constraints. The dataset's own fingertip columns `[44:74]` are computed with this FK ->
+V2 can be cross-checked numerically. V1 dataset_author_model, V3 measured (`observation.state` = motor feedback,
+`action` = commands), V6 timestamps (30 Hz nearest-neighbour resampling from native 80 Hz hand stream).
+Open: V4, V5, numeric check vs shipped fingertips. Size: 54,454 ep, 192 h, both hands; parquet 17 GB, RGB 510 GB,
+depth 2.65 TB (depth not needed). Apache-2.0. Caveat: normalized->angle is linear by the authors' definition.
+
+## Status update 2026-09-30 (evening)
+
+- EgoSteer: **verified** V1-V6 (details in config/verification.yaml; FK replay matches the shipped fingertips to
+  0.0001 mm; V4 on three tasks). States-only download (~17 GB) running; adapter next.
+- OpenArm Banana 1072: re-opened. The uploader is the rig's own lab (vclab, same URDF multipliers as HRDexDB F1).
+  Raw F1 counts recovered exactly from their affines; the official HRDexDB F1 formula fits the recovered counts,
+  the uploader's 750 counts/rad for the fingers does not (closure 1.148 vs 1.473 rad at the same mechanical stop).
+  Awaiting user decision on V2 = "recovered counts + HRDexDB formula"; then V4 with the videos.
+- OpenArm Banana 1072: **verified and converted** (user decision: recovered F1 counts + HRDexDB formula), right hand
+  only, 1,072 ep, 3.25 h; V4 coarse on floor2 / american / monkey.
+- EgoSteer: RY-H2 MJCF converted to URDF (scripts/models/mjcf_to_urdf_ruiyan.py; URDF FK == MuJoCo == shipped tips),
+  adapter unidex/adapters/egosteer.py; full conversion runs after the states download.
+- 2026-09-30 final: EgoSteer converted (54,454 ep, 89,095 active verified hand streams, 329.6 h; V5 0 % because the
+  authors' mapping clips to the joint range, raw excess <= 0.01 motor units). H1 full converted (4,883 ep).
+  Verified corpus: 736.5 h of hand streams, 6 hand families.

@@ -239,3 +239,25 @@ Reports `unified/clustering/v3_report_k7.txt`, gallery `v2_gallery_all_k7.png`.
 - F1 cannot reach the open-hand classes (thumb range as used in HRDexDB) -> feasibility mask.
 - Candidate: `hand_posture_class_v1` = KMeans k = 7 on pairwise distances, family-balanced (k = 5 remains the
   information knee; k = 7 adds precision classes that the new data populate).
+
+## Result 2026-09-30 (2): clustering on the 736 h corpus (6 hand families, + Ruiyan RY-H2 / EgoSteer)
+
+Families balanced (4000 each): Sharpa, XHand, Inspire DFX (H1 full), Inspire F1 (HRDexDB + OpenArm Banana), Shadow,
+Ruiyan RY-H2 (EgoSteer). Same features (10 pairwise distances). Reports `unified/clustering/v4_report_k{7,8}.txt`,
+gallery `v4_all_medoids_k7.png`, assignments `v4_assignments_all_k7.parquet`, knee `choose_k.*` (overwritten).
+
+- Future information (event, D = 1 s): k3 0.78, k5 0.82, k6 0.85, k8 0.87, k12 0.89 -> knee k = 6-8. Weakest gain:
+  Sharpa (T-Rex 0.57-0.66, Origami 0.64-0.69 at k5-8) and EgoSteer (0.73-0.79), strongest H1/Dexora/Banana (~0.85-0.90).
+- Stability (bootstrap ARI): k6 0.86 (unstable), k7 0.983, k8 0.976. No single-family cluster up to k = 12.
+- k = 7 reproduces the 388 h classes; the new data populate them and label them (EgoSteer task names / T-Rex
+  primitives, NOT clustering inputs):
+  c5 thumb-index pinch, other fingers curled (Ruiyan 43 %, Sharpa 29 %): pick up magnet, rope, bow, die; coin, insert ·
+  c1 closed power grasp, thumb on index+middle: hammer, pour, wipe, squeeze; wrap, screw, peel ·
+  c6 tool grip with pinky out: cut x5, drumsticks x7 ·
+  c2 index+middle extended, ring+pinky flexed (DFX 51 %): tower of Hanoi, twist, assemble ·
+  c3 flat hand, fingers adducted, thumb abducted (XHand 62 %, Sharpa 33 %): press, keyboard, card — NOT reachable by
+    F1 and RY-H2 (fixed finger spacing) -> feasibility mask ·
+  c0 wide semi-open wrap / preshape: laptop, globe, trash can; Shadow large-cylinder holds ·
+  c4 fully open hand (DFX 57 %): reach, open, lay out placemat — not reachable by F1.
+- k = 8 splits c2 into a DFX-dominated (0.69) two-finger class and a small Sharpa tripod (disassemble) -> k = 7 kept.
+- => `hand_posture_class_v1` candidate confirmed: KMeans k = 7, family-balanced, on 6 families.
