@@ -27,9 +27,9 @@ import pandas as pd
 from safetensors.numpy import save_file
 
 sys.path.insert(0, ".")
-from unidex.hands import REPO  # noqa: E402
+from unidex.hands import REPO, UNIFIED  # noqa: E402
 
-UNI = REPO / "unified"
+UNI = UNIFIED
 PRIMARY_CAMERA = {"humanoid_everyday_h1": "egocentric_d435", "egosteer": "head", "trex": "head_left",
                   "sharpa_origami": "head_left", "dexora": "top", "openarm_banana": "head",
                   "vitra_teledata": "head_d455"}

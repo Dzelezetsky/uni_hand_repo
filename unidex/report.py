@@ -4,9 +4,9 @@ from __future__ import annotations
 import pandas as pd
 import yaml
 
-from .hands import REPO, registry
+from .hands import REPO, UNIFIED, registry
 
-UNI = REPO / "unified"
+UNI = UNIFIED
 
 
 def _md(df: pd.DataFrame) -> str:

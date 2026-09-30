@@ -20,11 +20,11 @@ from itertools import combinations
 import numpy as np
 import pandas as pd
 
-from .hands import REPO
+from .hands import REPO, UNIFIED
 
 VERSION = "hand_posture_class_v1"
 MODEL = REPO / "config" / f"{VERSION}.json"
-UNI = REPO / "unified"
+UNI = UNIFIED
 OUT = UNI / "derived" / VERSION
 PAIRS = list(combinations(range(5), 2))
 

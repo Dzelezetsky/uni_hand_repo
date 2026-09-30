@@ -28,11 +28,11 @@ import pyarrow as pa
 import pyarrow.parquet as pq
 
 from . import schema as S
-from .hands import REPO, load_hand, mapping_verification, pad_normal_verification, registry
+from .hands import REPO, UNIFIED, load_hand, mapping_verification, pad_normal_verification, registry
 from .kinematics.canonical import CANONICAL_VERSION, FINGERS, PAD_NORMAL_VERSION
 from .mappings import MAPPINGS
 
-OUT = REPO / "unified"
+OUT = UNIFIED
 LIMIT_TOL = 0.05  # rad
 V5_TOL = 0.15    # rad, verification criterion V5 (config/verification.yaml)
 GROSS_TOL = 0.3   # rad beyond a URDF limit = physically impossible (e.g. sensor dropout frames) -> valid = False

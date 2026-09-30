@@ -1,6 +1,7 @@
 """Hand model registry (config/hands.yaml) -> CanonicalHand instances."""
 from __future__ import annotations
 
+import os
 import functools
 from pathlib import Path
 
@@ -9,6 +10,8 @@ import yaml
 from .kinematics.canonical import CanonicalHand
 
 REPO = Path(__file__).resolve().parents[1]
+# unified store location; on the training server set UNIDEX_UNIFIED to an untracked directory (unified_server/)
+UNIFIED = Path(os.environ.get("UNIDEX_UNIFIED", REPO / "unified"))
 REGISTRY_PATH = REPO / "config" / "hands.yaml"
 
 

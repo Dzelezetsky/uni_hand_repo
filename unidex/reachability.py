@@ -11,7 +11,7 @@ from dataclasses import dataclass
 import numpy as np
 import pandas as pd
 
-from .hands import REPO, load_hand
+from .hands import REPO, UNIFIED, load_hand
 from .mappings import MAPPINGS
 
 LIMIT_TOL = 0.05  # rad, same as the converter's limit QA
@@ -43,9 +43,9 @@ NATIVE_RANGES = {
 
 
 def _data_range(mapping_id: str):
-    hs = pd.read_parquet(REPO / "unified" / "hand_streams.parquet")
+    hs = pd.read_parquet(UNIFIED / "hand_streams.parquet")
     hs = hs[(hs.mapping_id == mapping_id) & (hs.canonicalization_status == "ok")]
-    x = np.concatenate([np.stack(pd.read_parquet(REPO / "unified" / p, columns=["native_q"]).native_q.to_numpy())
+    x = np.concatenate([np.stack(pd.read_parquet(UNIFIED / p, columns=["native_q"]).native_q.to_numpy())
                         for p in hs.path])
     return np.nanpercentile(x, 0.5, 0), np.nanpercentile(x, 99.5, 0)  # robust: rare all-zero frames exist
 

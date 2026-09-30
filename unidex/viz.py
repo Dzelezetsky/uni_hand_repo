@@ -14,10 +14,10 @@ import pandas as pd
 matplotlib.use("Agg")
 import matplotlib.pyplot as plt  # noqa: E402
 
-from .hands import REPO, load_hand  # noqa: E402
+from .hands import REPO, UNIFIED, load_hand  # noqa: E402
 from .kinematics.canonical import FINGERS, to_canonical  # noqa: E402
 
-UNI = REPO / "unified"
+UNI = UNIFIED
 COLORS = dict(thumb="tab:red", index="tab:orange", middle="tab:green", ring="tab:blue", pinky="tab:purple")
 
 

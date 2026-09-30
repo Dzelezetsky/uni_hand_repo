@@ -11,3 +11,9 @@ unified/oracle/
 stage1_data/
 stage1_runs/
 stage1_runs_smoke/
+# server: big directories are symlinks to another disk (a trailing-slash pattern does not match a symlink)
+/raw_data
+/unified_server
+/stage1_data
+/stage1_runs
+third_party/mimic_video/model/checkpoints

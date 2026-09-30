@@ -14,9 +14,9 @@ import json
 import numpy as np
 import pandas as pd
 
-from .hands import REPO
+from .hands import REPO, UNIFIED
 
-UNI = REPO / "unified"
+UNI = UNIFIED
 VERSION = "grasp_moments_v1"
 # v2 (2026-09-23): comparable "established grasp" definition across datasets. RealDex uses the authors' grasp
 # segments (segment.txt, used by RealDex's own training export): last SEG_END_FRAMES frames of each segment. Objects

@@ -24,6 +24,8 @@ ap.add_argument("--hand-mode", default="clean")
 ap.add_argument("--t5-subdir", default="t5_TESTONLY")
 ap.add_argument("--video-loss-scale", type=float, default=100.0,
                 help="0 -> any LoRA gradient must come from the hand loss (checks the joint objective)")
+ap.add_argument("--grad-split", type=int, default=0,
+                help="N steps measuring the LoRA gradient norm of the video loss and of the hand loss separately (-> lambda)")
 ap.add_argument("--truncate-blocks", type=int, default=0,
                 help="keep only the first N DiT blocks and read the hand head from block N (12 GB GPUs; code-path test)")
 a = ap.parse_args()
@@ -74,3 +76,28 @@ for step in range(a.steps):
           f" | grad LoRA {len(lora_g)} tensors (mean norm {sum(lora_g) / max(len(lora_g), 1):.2e}), "
           f"head {len(head_g)} tensors, frozen-with-grad {len(frozen_g)} | {time.time() - t0:.1f}s", flush=True)
 print(f"peak GPU memory {torch.cuda.max_memory_allocated() / 2**30:.1f} GiB at {a.height}x{a.width}, batch {a.batch}")
+
+
+def lora_grad_norm():
+    g = [p.grad.float().norm() ** 2 for n, p in model.net.named_parameters() if "lora" in n and p.grad is not None]
+    return float(torch.stack(g).sum().sqrt()) if g else 0.0
+
+
+if a.grad_split:
+    # same batches, two passes each: video loss only (hand_mode off) and hand loss only (video loss scale 0, lambda 1)
+    vid, hand = [], []
+    for step in range(a.grad_split):
+        batch = next(it)
+        batch = {k: (v.cuda(non_blocking=True) if torch.is_tensor(v) else v) for k, v in batch.items()}
+        for mode, scale, acc in (("off", a.video_loss_scale, vid), ("clean", 0.0, hand)):
+            model.config.hand_mode, model.loss_scale, model.config.hand_weight = mode, scale, 1.0
+            b = {k: (v.clone() if torch.is_tensor(v) else v) for k, v in batch.items()}
+            opt.zero_grad(set_to_none=True)
+            _, loss = model.training_step(b, step)
+            loss.backward()
+            acc.append(lora_grad_norm())
+        print(f"grad-split step {step}: |grad LoRA| video {vid[-1]:.3e}  hand(lambda=1) {hand[-1]:.3e}", flush=True)
+    import numpy as np
+    r = np.median(vid) / max(np.median(hand), 1e-12)
+    print(f"median |grad| video / hand(lambda=1) = {r:.1f}  ->  lambda for hand = 10% / 30% of video gradient: "
+          f"{0.1 * r:.1f} / {0.3 * r:.1f}")
