@@ -7,3 +7,4 @@ external_code/
 # third-party / possibly non-redistributable hand models
 external_hand_models/
 unified/derived/hand_posture_class_v1/
+unified/oracle/

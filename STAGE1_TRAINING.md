@@ -116,3 +116,37 @@ Reports `unified/clustering/within_class_multimodality{,_resid}.txt`.
   per class with winner-takes-all loss + hypothesis logits (K x M = 14 outputs per future latent frame), not a single
   L2 residual. Flow matching (option 2) remains the reserve if the probe shows the 2-hypothesis head saturating.
   (Finer classes are no alternative: choose_k gains only 0.87 -> 0.91 from k = 8 to 16.)
+
+## Finding 2026-09-30: oracle experiment, stage A (no images) — `scripts/oracle/`
+
+Does GROUND-TRUTH future hand information improve action-chunk prediction? Per dataset an MLP predicts arm and hand
+deltas over the next 2 s (8 horizons) from arm history (t, t-0.25, t-0.5), current hand state + current posture
+class, instruction text (TF-IDF+SVD). Variants add a future-hand input at 0.5/1/1.5/2 s. Episode-level splits, 3 seeds.
+Arm target = future MEASURED arm joints (not commands). Hand target is nearly the oracle itself -> leak-prone, only the
+ARM numbers test the hypothesis. Windows `build_windows.py` (H1 217 k, Dexora 588 k, T-Rex 846 k, EgoSteer 12 k-episode
+subset 621 k anchors), `train_oracle.py`, `summarize.py` (table: unified/oracle/summary_stageA.txt, git-ignored dir).
+
+ARM improvement over the no-oracle model, event windows (hand change in the top 20 %), far horizons 1.25-2 s, %:
+
+| dataset (hand) | true class | true geometry | timing only (class changes?) | class 25 % corrupted | 50 % | random class |
+|---|---|---|---|---|---|---|
+| H1 (Inspire DFX)   | 19.5 ± 5.5 | 24.5 ± 3.2 | 13.0 ± 0.2 | 8.5 | 2.3 | -3.1 |
+| Dexora (XHand)     | 22.3 ± 1.8 | 32.9 ± 3.6 | 17.3 ± 2.9 | 9.5 | 3.3 | -1.9 |
+| EgoSteer (RY-H2)   | 21.7 ± 1.0 | 35.5 ± 0.3 | 18.1 ± 1.4 | 10.9 | 4.1 | -1.3 |
+| T-Rex (Sharpa 22)  |  8.8 ± 2.3 | 30.2 ± 1.1 |  5.2 ± 1.0 | 5.9 | 3.5 | 0.3 |
+
+(all anchors: 4-11 % for class, 13-25 % for geometry; near horizons roughly half of far.)
+
+- The hypothesis survives stage A: knowing the future hand posture makes the ARM trajectory ~20 % more predictable at
+  grasp/release events on three of four datasets; the random-class control is <= 0 -> not an input-size effect.
+- Most of the class benefit is TIMING (when the hand will change): timing-only reaches 65-85 % of the class gain; the
+  grasp TYPE adds ~3-6 points.
+- Continuous future geometry is worth much more than the 7-class label, most of all for the 22-DoF Sharpa hand
+  (30 % vs 9 %) — consistent with choose_k (few classes capture Sharpa poorly). => keep the continuous geometry head as
+  a first-class target (class + residual design), do not reduce the target to classes.
+- Accuracy matters: with 25 % random errors about half of the gain is left, with 50 % almost nothing. Random errors
+  are harsher than a model's structured errors, but Stage-1 must predict the future class clearly better than
+  "copy the current class" (which already is part of the base input) to help.
+- Caveats: upper bound (true future); base has NO vision — images may already carry part of the timing information,
+  so stage B (frozen visual features, H1 video is local) must confirm the gain with a visual base; arm target = future
+  measured state.
