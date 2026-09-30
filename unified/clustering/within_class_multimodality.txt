@@ -1,0 +1,72 @@
+Is the future hand posture multimodal WITHIN a posture class, given the current posture? (STAGE1_TRAINING.md,
+open check: decides head option 1 "class + residual" vs option 2 generative / flow matching.)
+
+Space: the 10 pairwise fingertip distances, z-scored with the frozen hand_posture_class_v1 normalization.
+Anchors every STEP s on verified timed streams (<= 400 streams per hand family, as choose_k.py):
+  x = posture(t), y = posture(t + D), c = hand_posture_class_v1(y).
+Neighbourhood test (per hand family, horizon D, condition):
+  A "x"      : N nearest anchors in x (other episodes, one per episode) -> conditional p(y | x)
+  B "x + c"  : same, restricted to the same FUTURE class c           -> p(y | x, c) = what option 1's residual faces
+  2-means on the N future postures; Ashman separation Dsep = |m1-m2| / sqrt((s1^2+s2^2)/2) along the centre line,
+  minor mode share >= MIN_SHARE. Null: N draws from a Gaussian fitted to the same neighbourhood (Ledoit-Wolf),
+  NULL_REPS per neighbourhood, pooled -> 95th percentile threshold per (family, D, condition).
+Effect sizes (palm widths, pw; mm via each family's palm scale): mode separation, and the MEAN-REGRESSION error =
+distance from the neighbourhood mean (what an L2 head predicts) to the nearest mode, vs the within-mode spread.
+Caveat: conditions on hand proprioception only; video + language can only reduce the multimodality -> upper bound.
+
+N_NB=50 R_MAX=1.0 z  N_QUERY=500/family (event anchors)  null reps 5  min share 0.2
+nearest-class-centroid distance per class (pw): pinch_thumb_index 1.28, power_closed 0.94, tool_grip_pinky_out 0.90, two_finger_index_middle 0.90, flat_fingers_adducted 0.71, wide_semi_open 0.71, open_hand 1.02
+  D=1 DFX     B per future class (frac bimodal / n): power_closed 40%/62.0, tool_grip_pi 87%/15.0, two_finger_i 86%/59.0, wide_semi_op 15%/34.0, open_hand 96%/23.0
+  D=1 F1      B per future class (frac bimodal / n): power_closed 69%/163.0, wide_semi_op 41%/104.0
+  D=1 Ruiyan  B per future class (frac bimodal / n): pinch_thumb_ 79%/28.0, wide_semi_op 61%/28.0
+  D=1 Sharpa  B per future class (frac bimodal / n): 
+  D=1 XHand   B per future class (frac bimodal / n): power_closed 30%/99.0, flat_fingers 35%/89.0
+
+A = p(y|x), B = p(y|x, future class). local = share of queries with a neighbourhood within R_MAX.
+frac_bimodal = significant 2-mode split (vs Gaussian null) with minor mode >= 20 %.
+For bimodal neighbourhoods (medians): gap = distance between modes, mean_err = L2-head error (mean -> nearest mode), spread = within-mode RMS; total = RMS spread of all futures; gap_vs_class = gap / distance to the nearest other class centroid.
+  D family cond   n  local   thr  frac_bimodal  gap_mm  mean_err_mm  spread_mm  total_mm  gap_vs_class
+0.5    DFX    A 204  0.408 3.361         0.162  88.795       32.287     49.651    53.570         1.542
+0.5    DFX    B 160  0.320 3.362         0.450  36.722       15.168     11.276    28.313         0.650
+0.5     F1    A 314  0.628 3.346         0.341  92.242       23.012     25.852    37.745         1.819
+0.5     F1    B 273  0.546 3.360         0.498  42.425       15.628     16.847    24.406         0.919
+0.5 Ruiyan    A 140  0.280 3.385         0.271  72.537       25.004     34.027    48.369         1.491
+0.5 Ruiyan    B  73  0.146 3.382         0.425  40.835       12.251     27.596    28.775         0.964
+0.5 Sharpa    A  69  0.138 3.381         0.377 132.122       33.386     36.279    50.965         2.390
+0.5 Sharpa    B  46  0.092 3.311         0.457  50.023       14.891     23.881    30.723         0.808
+0.5  XHand    A 332  0.664 3.358         0.295 128.408       32.644     41.781    56.528         2.448
+0.5  XHand    B 227  0.454 3.365         0.317  60.309       19.153     25.669    32.905         1.054
+1.0    DFX    A 240  0.480 3.391         0.312 137.502       35.248     46.082    68.062         2.463
+1.0    DFX    B 193  0.386 3.389         0.601  50.186       20.100     38.654    35.353         0.975
+1.0     F1    A 333  0.666 3.382         0.541 107.438       30.029     28.911    50.129         2.167
+1.0     F1    B 268  0.536 3.401         0.582  51.035       18.966     18.930    28.622         1.019
+1.0 Ruiyan    A 120  0.240 3.416         0.458  87.737       22.241     49.212    62.000         1.605
+1.0 Ruiyan    B  57  0.114 3.347         0.684  90.887       21.489     36.562    39.691         1.207
+1.0 Sharpa    A  70  0.140 3.385         0.614 149.211       53.318     41.301    69.593         2.737
+1.0 Sharpa    B  29  0.058 3.417         0.483  61.340       19.529     21.058    32.428         1.306
+1.0  XHand    A 319  0.638 3.374         0.630 142.637       47.501     43.647    74.174         2.711
+1.0  XHand    B 198  0.396 3.391         0.308  64.187       26.919     27.046    40.788         1.151
+2.0    DFX    A 266  0.532 3.351         0.797 152.292       42.388     53.138    85.186         2.859
+2.0    DFX    B 237  0.474 3.404         0.624  54.287       23.036     42.225    48.632         1.043
+2.0     F1    A 354  0.708 3.373         0.734 113.220       35.872     32.980    57.619         2.249
+2.0     F1    B 294  0.588 3.345         0.714  49.851       17.209     21.185    30.230         0.999
+2.0 Ruiyan    A  79  0.158 3.409         0.684  92.587       27.417     55.061    71.027         1.293
+2.0 Ruiyan    B  59  0.118 3.340         0.102  48.606       20.699     31.343    53.092         1.086
+2.0 Sharpa    A  78  0.156 3.300         0.667 161.477       49.101     47.315    79.941         2.644
+2.0 Sharpa    B  25  0.050 3.427         0.400  58.072       22.767     26.420    38.693         1.058
+2.0  XHand    A 338  0.676 3.344         0.858 145.563       60.626     44.804    82.382         2.487
+2.0  XHand    B 219  0.438 3.394         0.361  62.737       27.497     27.815    41.927         1.073
+
+family-mean, condition A:
+     frac_bimodal   gap_mm  mean_err_mm  spread_mm  gap_vs_class
+D                                                               
+0.5         0.289  102.821       29.267     37.518         1.938
+1.0         0.511  124.905       37.667     41.831         2.337
+2.0         0.748  133.028       43.081     46.660         2.306
+
+family-mean, condition B:
+     frac_bimodal  gap_mm  mean_err_mm  spread_mm  gap_vs_class
+D                                                              
+0.5         0.429  46.063       15.418     21.054         0.879
+1.0         0.532  63.527       21.401     28.450         1.132
+2.0         0.440  54.711       22.242     29.798         1.052

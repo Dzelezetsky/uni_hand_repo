@@ -89,3 +89,30 @@ Two regimes, both needed:
 Plan: start with option 1 (K=5 + per-class residual, per-future-frame queries, H_t and hand embedding as inputs).
 Keep option 2 in reserve if multimodality WITHIN a class is large — checkable on current data: spread of future
 postures within one class given the same current posture.
+
+## Finding 2026-09-30: multimodality of the future posture WITHIN a class (`scripts/analysis/within_class_multimodality.py`)
+
+Question from the design above: given the current posture, is the future posture inside one hand_posture_class_v1
+class multimodal (-> option 2) or unimodal (-> option 1 suffices)? Space = 10 pairwise distances (z-scored with the
+frozen model), event anchors (top 20 % change per dataset), 5 hand families, 50-neighbour neighbourhoods in the
+current posture (other episodes only), 2-mode split along PC1 vs a Gaussian null (selftest: 6 % false positives,
+58 % / 98 % detection at 3 / 4 sd mode gap). mm = norm over the 10 pairwise-distance differences (not per fingertip).
+Reports `unified/clustering/within_class_multimodality{,_resid}.txt`.
+
+| D = 1 s, family mean | frac bimodal | mode gap | L2-head error (mean -> nearest mode) | within-mode spread |
+|---|---|---|---|---|
+| A: p(y given x)                            | 0.51 | 125 mm | 38 mm | 42 mm |
+| B: p(y given x, future class)              | 0.53 | 64 mm  | 21 mm | 28 mm |
+| B, futures residualized on local x (control) | 0.30 | 52 mm  | 20 mm | 26 mm |
+
+- The class removes the large modes (gap 125 -> 52-64 mm, the between-class structure) — as intended.
+- Residual within-class bimodality is real but moderate: ~30 % of event neighbourhoods after the control (DFX 52 %,
+  F1 42 %, XHand/Ruiyan/Sharpa ~20 %; null 6 %), mode gap ≈ distance between neighbouring class centroids
+  (ratio 1.05). An L2/mean residual would add ~20 mm of mode-averaging error on top of ~26 mm irreducible spread
+  there: ≈ +25 % RMS error in those neighbourhoods, ≈ +10 % over all event windows.
+- Upper bound: conditions on hand proprioception only; video + language disambiguate part of it. Sharpa / Ruiyan
+  B estimates rest on few local neighbourhoods (5-11 % of queries) -> noisy.
+- Decision proposal: option 1 stays the first head, but the residual is multi-hypothesis — M = 2 residual hypotheses
+  per class with winner-takes-all loss + hypothesis logits (K x M = 14 outputs per future latent frame), not a single
+  L2 residual. Flow matching (option 2) remains the reserve if the probe shows the 2-hypothesis head saturating.
+  (Finer classes are no alternative: choose_k gains only 0.87 -> 0.91 from k = 8 to 16.)
