@@ -78,3 +78,14 @@ extrinsics_frame, n_frames_timed`. `rgb_ref` schemes: plain path (mp4), `zip://<
 - Origin = knuckle centroid (v0.1+knuckle_origin; KINEMATICS.md allowed a validated alternative to (w+b)/2 —
   wrist points are not comparable across URDFs).
 - Left hands: computed in their own frame, then Z negated -> right-hand convention (unit-tested).
+
+## Derived layers (`unified/derived/`, versioned, never written into the episode files)
+
+- `grasp_moments_v1/v2.parquet` — interaction samples from measured signals only (`unidex/moments.py`).
+- `hand_posture_class_v1/<dataset_id>.parquet` (`python -m unidex.posture`; git-ignored, ~0.7 GB, rebuildable) —
+  one row per sample of every verified hand stream: `source_episode_id, side, hand_model_id, frame_index, t_s,
+  posture_class` (int8, 0..6, -1 invalid), `dist` / `margin` (z-space distance to the nearest / gap to the 2nd
+  centroid, for confidence filtering), `reachable` (the hand family can form that class's centroid; False = nearest
+  class is outside the hand's range, e.g. F1 in `open_hand`). Frozen model: `config/hand_posture_class_v1.json`
+  (centroids, z-normalization, class names, feature/clustering/canonical versions); summary
+  `unified/derived/hand_posture_class_v1.json`. Classes are POSTURES, not grasps (GRASP_LABELING.md).

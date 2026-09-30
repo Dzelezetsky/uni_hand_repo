@@ -160,6 +160,9 @@ def feasible(centroids):
     return out
 
 
+MODELS = {}
+
+
 def describe(D, X, km, norm, name, k):
     mu, sd = norm
     lab = km.labels_
@@ -169,6 +172,12 @@ def describe(D, X, km, norm, name, k):
     compn = comp.div(comp.sum(1), axis=0)
     feas = feasible(cent)
     order = np.argsort(cent[:, 0])  # sort clusters by thumb-index distance (pinch first)
+    MODELS[name] = {"k": k, "features": FEAT, "feature_units": "palm widths (fingertips_palm_norm)",
+                    "mu": mu.tolist(), "sd": sd.tolist(),
+                    "centroids": cent[order].tolist(), "kmeans_label_of_rank": order.tolist(),
+                    "reachable_rms": {f: feas[f][order].round(4).tolist() for f in FAMS},
+                    "family_share": {f: compn[f].reindex(order).round(3).tolist() for f in compn.columns},
+                    "fit_samples_per_family": D.family.value_counts().to_dict(), "seed": SEED}
     L = [f"\n=== {name}, k={k}  (clusters sorted by thumb-index distance; distances in palm widths)",
          f"{'c':>2s} " + " ".join(f"{n:>5s}" for n in FEAT) + "  | family share (balanced) | interaction rate | "
          "reachable (RMS pw)"]
@@ -263,6 +272,8 @@ for D, X, lab, cent, order, tag in [(ALL, Xa, lab_a, cent_a, ord_a, f"all_k{K_AL
         dist_to_centroid=np.linalg.norm((X - cent[lab]) / norm_all[1] if tag.startswith("all") else
                                         (X - cent[lab]) / norm_gr[1], axis=1)
     ).to_parquet(OUT / f"v2_assignments_{tag}.parquet")
+import json  # noqa: E402
+(OUT / f"v2_model_all_k{K_ALL}.json").write_text(json.dumps(MODELS["ALL postures"], indent=1))
 txt = "\n".join(lines + La + Lg)
 (OUT / "v2_report.txt").write_text(txt + "\n")
 print("\n".join(La + Lg))

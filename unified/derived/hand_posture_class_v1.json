@@ -1,0 +1,163 @@
+{
+ "version": "hand_posture_class_v1",
+ "feature_version": "pairwise_tip_dist_v1 (10 distances, fingertips_palm_norm)",
+ "clustering_version": "kmeans_k7_family_balanced_v4 (scripts/analysis/cluster_v2.py 7 3, seed 0, 6 families x 4000)",
+ "canonical_version": "fingertips_palm_v0.1+knuckle_origin",
+ "classes": [
+  {
+   "id": 0,
+   "name": "pinch_thumb_index",
+   "description": "thumb-index pinch, middle/ring/pinky curled"
+  },
+  {
+   "id": 1,
+   "name": "power_closed",
+   "description": "closed power grasp, thumb on index+middle"
+  },
+  {
+   "id": 2,
+   "name": "tool_grip_pinky_out",
+   "description": "tool grip with the pinky spread out"
+  },
+  {
+   "id": 3,
+   "name": "two_finger_index_middle",
+   "description": "index+middle extended, ring+pinky flexed"
+  },
+  {
+   "id": 4,
+   "name": "flat_fingers_adducted",
+   "description": "flat hand, fingers adducted, thumb abducted"
+  },
+  {
+   "id": 5,
+   "name": "wide_semi_open",
+   "description": "wide semi-open wrap / preshape"
+  },
+  {
+   "id": 6,
+   "name": "open_hand",
+   "description": "fully open hand"
+  }
+ ],
+ "model_file": "config/hand_posture_class_v1.json",
+ "per_dataset": {
+  "dexora": {
+   "samples": 5836488,
+   "class_share": {
+    "0": 0.0243,
+    "1": 0.2381,
+    "2": 0.0182,
+    "3": 0.0117,
+    "4": 0.5655,
+    "5": 0.0635,
+    "6": 0.0787
+   },
+   "share_in_unreachable_class": 0.0
+  },
+  "egosteer": {
+   "samples": 35681016,
+   "class_share": {
+    "0": 0.2157,
+    "1": 0.1518,
+    "2": 0.0623,
+    "3": 0.0374,
+    "4": 0.0005,
+    "5": 0.3598,
+    "6": 0.1724
+   },
+   "share_in_unreachable_class": 0.0005
+  },
+  "hrdexdb": {
+   "samples": 629316,
+   "class_share": {
+    "0": 0.0132,
+    "1": 0.4487,
+    "2": 0.0346,
+    "3": 0.0185,
+    "4": 0.002,
+    "5": 0.4143,
+    "6": 0.0688
+   },
+   "share_in_unreachable_class": 0.0708
+  },
+  "humanoid_everyday_h1": {
+   "samples": 1923845,
+   "class_share": {
+    "0": 0.0351,
+    "1": 0.0729,
+    "2": 0.0514,
+    "3": 0.1194,
+    "4": 0.0183,
+    "5": 0.0941,
+    "6": 0.6088
+   },
+   "share_in_unreachable_class": 0.0
+  },
+  "openarm_banana": {
+   "samples": 234978,
+   "class_share": {
+    "0": 0.0378,
+    "1": 0.3199,
+    "2": 0.0889,
+    "3": 0.0315,
+    "4": 0.0075,
+    "5": 0.424,
+    "6": 0.0903
+   },
+   "share_in_unreachable_class": 0.0978
+  },
+  "realdex": {
+   "samples": 35956,
+   "class_share": {
+    "0": 0.0498,
+    "1": 0.2079,
+    "2": 0.0362,
+    "3": 0.0025,
+    "4": 0.0182,
+    "5": 0.6312,
+    "6": 0.0543
+   },
+   "share_in_unreachable_class": 0.0
+  },
+  "sharpa_origami": {
+   "samples": 21572208,
+   "class_share": {
+    "0": 0.3803,
+    "1": 0.3274,
+    "2": 0.1962,
+    "3": 0.0565,
+    "4": 0.0035,
+    "5": 0.0064,
+    "6": 0.0298
+   },
+   "share_in_unreachable_class": 0.0
+  },
+  "trex": {
+   "samples": 10946918,
+   "class_share": {
+    "0": 0.0607,
+    "1": 0.2237,
+    "2": 0.0494,
+    "3": 0.0493,
+    "4": 0.3462,
+    "5": 0.1837,
+    "6": 0.0871
+   },
+   "share_in_unreachable_class": 0.0
+  },
+  "vitra_teledata": {
+   "samples": 4807,
+   "class_share": {
+    "0": 0.0185,
+    "1": 0.2627,
+    "2": 0.0048,
+    "3": 0.0029,
+    "4": 0.2166,
+    "5": 0.2211,
+    "6": 0.2734
+   },
+   "share_in_unreachable_class": 0.0
+  }
+ }
+}

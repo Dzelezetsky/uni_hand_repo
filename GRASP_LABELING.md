@@ -261,3 +261,8 @@ gallery `v4_all_medoids_k7.png`, assignments `v4_assignments_all_k7.parquet`, kn
   c4 fully open hand (DFX 57 %): reach, open, lay out placemat — not reachable by F1.
 - k = 8 splits c2 into a DFX-dominated (0.69) two-finger class and a small Sharpa tripod (disassemble) -> k = 7 kept.
 - => `hand_posture_class_v1` candidate confirmed: KMeans k = 7, family-balanced, on 6 families.
+- Fixed 2026-09-30 as `hand_posture_class_v1` (config/hand_posture_class_v1.json, `python -m unidex.posture`):
+  0 pinch_thumb_index · 1 power_closed · 2 tool_grip_pinky_out · 3 two_finger_index_middle · 4 flat_fingers_adducted ·
+  5 wide_semi_open · 6 open_hand. 76.9 M samples labelled; reproduces the clustering assignments of the 24,000 fit
+  samples exactly. Class shares are strongly dataset-dependent (Dexora 57 % flat = XHand idle pose; H1 61 % open;
+  Origami 38 % pinch; EgoSteer 36 % wide) -> training must balance by dataset/family, not by raw frames.
