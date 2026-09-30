@@ -107,15 +107,8 @@ cu126 = [
   "nvidia-nvtx-cu12==12.6.77; platform_machine == 'x86_64'",
 ]
 
-cu129 = [
-  "nvidia-cudnn-cu12==9.10.2.21; platform_machine == 'x86_64'",
-  "torch==2.8.0; platform_machine == 'x86_64'",
-  "torchvision==0.23.0; platform_machine == 'x86_64'",
-  "triton==3.4.0; platform_machine == 'x86_64'",
-  "apex==0.1.0; platform_machine == 'x86_64'",
-  "flash-attn==2.8.3+cu12torch2.8cxx11abiTRUE; platform_machine == 'x86_64'",
-  "transformer-engine[pytorch]==1.13.0; platform_machine == 'x86_64'",
-]
+# UnifiedDex modification: cu129 (Blackwell) extra removed — locking it forced a source build of apex
+# (needs nvcc). A100 (sm80) and RTX 3060 (sm86) both run the cu126 wheels.
 
 [project.readme]
 content-type = "text/markdown"
@@ -132,52 +125,32 @@ issues = "https://github.com/nvidia-cosmos/cosmos-predict2/issues"
 repository = "https://github.com/nvidia-cosmos/cosmos-predict2"
 
 [tool.uv]
+# UnifiedDex modification: x86_64 only (local RTX 3060 + A100 server). The aarch64 entries made uv clone
+# triton / apex / TransformerEngine from git while locking, which is slow and fails on flaky networks.
 environments = [
   "python_version == '3.10' and sys_platform == 'linux' and platform_machine == 'x86_64'",
-  "python_version == '3.10' and sys_platform == 'linux' and platform_machine == 'aarch64'",
 ]
 
 required-environments = [
   "python_version == '3.10' and sys_platform == 'linux' and platform_machine == 'x86_64'",
-  "python_version == '3.10' and sys_platform == 'linux' and platform_machine == 'aarch64'",
 ]
 
-conflicts = [
-  [
-    { extra = "cu126" },
-    { extra = "cu129" },
-  ],
-]
 
 [tool.uv.sources]
 apex = [
   { index = "cosmos-cu126", extra = "cu126", marker = "platform_machine == 'x86_64'" },
-  { git = "https://github.com/NVIDIA/apex.git", extra = "cu126", marker = "platform_machine == 'aarch64'" },
-  { git = "https://github.com/NVIDIA/apex.git", extra = "cu129", marker = "platform_machine == 'x86_64'" },
 ]
 flash-attn = [
   { index = "cosmos-cu126", extra = "cu126", marker = "platform_machine == 'x86_64'" },
-  { url = "https://github.com/Dao-AILab/flash-attention/releases/download/v2.8.3/flash_attn-2.8.3%2Bcu12torch2.8cxx11abiTRUE-cp310-cp310-linux_x86_64.whl", extra = "cu129", marker = "platform_machine == 'x86_64'" },
 ]
 transformer-engine = [
   { index = "cosmos-cu126", extra = "cu126", marker = "platform_machine == 'x86_64'" },
-  { git = "https://github.com/NVIDIA/TransformerEngine.git", tag = "v1.13", extra = "cu126", marker = "platform_machine == 'aarch64'" },
-]
-triton = [
-  { git = "https://github.com/triton-lang/triton.git", tag = "v3.2.0", subdirectory = "python", extra = "cu126", marker = "platform_machine == 'aarch64'" }
 ]
 torch = [
   { index = "cosmos-cu126", extra = "cu126", marker = "platform_machine == 'x86_64'" },
-  { index = "pytorch-cu126", extra = "cu126", marker = "platform_machine == 'aarch64'" },
-  { index = "pytorch-cu129", extra = "cu129", marker = "platform_machine == 'x86_64'" },
 ]
 torchvision = [
   { index = "cosmos-cu126", extra = "cu126", marker = "platform_machine == 'x86_64'" },
-  { index = "pytorch-cu126", extra = "cu126", marker = "platform_machine == 'aarch64'" },
-  { index = "pytorch-cu129", extra = "cu129", marker = "platform_machine == 'x86_64'" },
-]
-nvidia-cudnn-cu12 = [
-  { index = "pytorch-cu129", extra = "cu129", marker = "platform_machine == 'x86_64'" },
 ]
 
 [[tool.uv.index]]
@@ -190,10 +163,6 @@ name = "pytorch-cu126"
 url = "https://download.pytorch.org/whl/cu126"
 explicit = true
 
-[[tool.uv.index]]
-name = "pytorch-cu129"
-url = "https://download.pytorch.org/whl/cu129"
-explicit = true
 
 [tool.uv.extra-build-dependencies]
 apex = [

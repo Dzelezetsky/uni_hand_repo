@@ -31,7 +31,8 @@ Consequences for Stage-1:
 - Stage 1 (video backbone, LoRA): Cosmos-Predict2 2B latent DiT; input = 5 clean context frames (latent) + T5 language;
   output = the whole window of future latent frames at once (flow matching), not a single next frame. For the mimic
   hand setup the backbone is finetuned on a ~200 h robot video corpus. 480x640 frames.
-- Stage 2 (action decoder, backbone frozen): DiT cross-attending to layer-19 hidden states of the video model at video
+- Stage 2 (action decoder, backbone frozen): DiT cross-attending to layer-20 hidden states (paper text said 19; the
+  released code and all checkpoints use xattn_layer_idx = 20, see below) of the video model at video
   flow time tau_v (+ proprioception) -> action chunk A_t = [a_t .. a_{t+Ha-1}]; mimic: relative EE pose + absolute
   hand joints. Only 1.5–2.2 h of task data per task. At inference tau_v = 1: future latents are pure noise, one
   backbone pass, no video is generated.
@@ -150,3 +151,26 @@ ARM improvement over the no-oracle model, event windows (hand change in the top 
 - Caveats: upper bound (true future); base has NO vision — images may already carry part of the timing information,
   so stage B (frozen visual features, H1 video is local) must confirm the gain with a visual base; arm target = future
   measured state.
+
+## Reference: mimic-video code facts (vendored in third_party/mimic_video, upstream e3355db; checked 2026-09-30)
+
+Checked by reading the code and `stage1/scripts/inspect_mimic.py` on the released checkpoints (RTX 3060):
+- Video backbone `v2w_pretrained_cosmos.pt`: Cosmos-Predict2 2B DiT, 1956 M params, 28 blocks, width 2048, 16 heads,
+  patch 2x2, latent 16 channels, bf16. Fixed window `state_t = 16` latent frames (61 video frames), 480x640 ->
+  16 x 30 x 40 = 19,200 tokens. Text = cross-attention to T5-11B embeddings (1024-d, 512 tokens).
+  Video windows in their configs: 61 frames at 5 fps (Bridge, 12 s) / 10 fps (LIBERO, 6 s), `obs_history` 5.
+  Video finetuning = LoRA rank 256 (alpha 32) on q/k/v/output_proj, x_embedder, t_embedder, MLP; lr 1.778e-4.
+- Hidden states for the action decoder: `hidden_states[20]` = output of the 20th of 28 blocks
+  (`hidden_states[0]` = patch-embedded input); the forward stops after block 20. Shape (B, 16, 30, 40, 2048).
+  Video noise level sigma is sampled per sample in training (`draw_video_sigma`, incl. 5 % log-uniform 200..1e5).
+  They are stored with `.detach().clone()` -> NO gradient reaches the video model through the action/hand path.
+  => for the joint objective L_video + lambda * L_hand the hand head must bypass this detach (our modification).
+- Action decoder (Bridge `w2a_..._layer20`): separate DiT, 499 M params, 24 blocks, width 1024, 8 heads;
+  cross-attention k/v 2048 -> 1024 after LayerNorm `ctx_norm`; token sequence = 1 obs token + 15 action tokens
+  (Bridge action/obs dim 10: pos 3 + rot6d 6 + gripper 1; chunk 15 steps at 5 Hz = 3 s); time embedding `pair`
+  takes BOTH flow times (action tau and video sigma); `obs_mask_token` (obs dropout 0.2). Only the embedders /
+  final layer depend on the action dimension -> the trunk can initialize our decoders / hand head.
+- RTX 3060 12 GB: one denoise pass up to block 20, B = 1, full 480x640 window: 4.5 s (incl. warm-up), peak 6.3 GiB.
+- Environment: `third_party/mimic_video/model`, `uv sync --extra cu126` (torch 2.6 + cu126, flash-attn 2.6.3,
+  transformer-engine 1.13, apex, megatron-core; prebuilt wheels from the NVIDIA cosmos-dependencies index, no nvcc).
+  `source stage1/env.sh` before running (points TE at the pip libnvrtc when no CUDA toolkit is installed).
