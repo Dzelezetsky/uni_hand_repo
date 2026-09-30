@@ -45,7 +45,8 @@ def latent_target_offsets(num_frames=NUM_FRAMES, obs_history=OBS_HISTORY, fps=FP
 
 class Stage1Dataset(torch.utils.data.Dataset):
     def __init__(self, root: str | Path, repo: str | Path, datasets: list[str] | None = None, is_val: bool = False,
-                 val_ratio: float = 0.01, allow_dummy_t5: bool = False, seed: int | None = None):
+                 val_ratio: float = 0.01, allow_dummy_t5: bool = False, seed: int | None = None,
+                 t5_subdir: str = "t5", size: tuple[int, int] = (H, W)):
         self.root, self.repo = Path(root), Path(repo)
         rows = [json.loads(l) for l in (self.root / "index.jsonl").read_text().splitlines()]
         if datasets:
@@ -54,6 +55,8 @@ class Stage1Dataset(torch.utils.data.Dataset):
         rows = [r for r in rows if ((key(r) * 2654435761) % 10000 < val_ratio * 10000) == is_val]
         self.rows = rows
         self.allow_dummy_t5 = allow_dummy_t5
+        self.t5_subdir = t5_subdir
+        self.h, self.w = size  # (480, 640) for training; smaller only for local smoke tests
         self.offsets = latent_target_offsets()
         self.rng = np.random.default_rng(seed)
 
@@ -83,14 +86,15 @@ class Stage1Dataset(torch.utils.data.Dataset):
         del vr
         x = x.permute(3, 0, 1, 2).float()                                                # [3,U,h,w]
         h, w = x.shape[-2:]
-        s = min(H / h, W / w)
+        HH, WW = self.h, self.w
+        s = min(HH / h, WW / w)
         nh, nw = round(h * s), round(w * s)
         x = F.interpolate(x.reshape(-1, 1, h, w), size=(nh, nw), mode="bilinear", align_corners=False,
                           antialias=True).reshape(3, -1, nh, nw)
-        top, left = (H - nh) // 2, (W - nw) // 2
-        out = torch.zeros(3, x.shape[1], H, W)
+        top, left = (HH - nh) // 2, (WW - nw) // 2
+        out = torch.zeros(3, x.shape[1], HH, WW)
         out[:, :, top:top + nh, left:left + nw] = x
-        pad = torch.ones(1, H, W)
+        pad = torch.ones(1, HH, WW)
         pad[:, top:top + nh, left:left + nw] = 0
         video = out.round().clamp_(0, 255).to(torch.uint8)[:, torch.from_numpy(inv)]
         return video, pad
@@ -111,7 +115,7 @@ class Stage1Dataset(torch.utils.data.Dataset):
 
     # ------------------------------------------------------------------ text
     def _t5(self, sha):
-        p = self.root / "t5" / f"{sha}.safetensors"
+        p = self.root / self.t5_subdir / f"{sha}.safetensors"
         emb = np.zeros((T5_TOKENS, T5_DIM), np.float32)
         mask = np.zeros(T5_TOKENS, np.int64)
         if p.exists():
