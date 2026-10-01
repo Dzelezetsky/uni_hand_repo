@@ -2,9 +2,16 @@
 
 Episode-centric folders airbot_{articulation,assemble,dexterous,pick_and_place} are used; the `dexora/` task-level
 folder is a second VIEW of the same episodes and is skipped (no duplicates).
-Text: meta/episode_instruction_mapping.jsonl has `instruction` (natural language) and `action_name`; they do not
-always describe the same task (e.g. airbot_articulation ep 0: action_name place_wipes_blocks..., instruction "open the
-laptop"). Both are kept; instruction_original = instruction (what LeRobot `tasks` stores).
+Text: meta/episode_instruction_mapping.jsonl has `instruction` (natural language) and `action_name`. The
+action/task NAMES are unreliable (40-75% disagree with the instruction; checked on video: articulation ep 0 opens a
+laptop, action_name place_wipes_blocks...; pick_and_place ep 3000 moves a book, task place_coffee_cups_in_basin);
+the instructions matched the video in every checked case. instruction_original = instruction; action_name is kept in
+`extra` only as provenance and must not be used as text.
+Release bug (fixed here): some mapping rows repeat an earlier episode_index (pick_and_place lines 2084-2260 restart
+at 0; assemble line 1404 and dexterous line 1337 say 0). Such a row belongs to the episode of its line number (checked:
+its action_name then equals the episode parquet's task_index name for every row; pick_and_place ep 0 / 2084 on video).
+A row is used only if its action_name equals the parquet's task name. pick_and_place episodes 2261-6296 have no
+mapping row in the release (meta covers 2261 of 6297) -> annotation_source "none".
 """
 from __future__ import annotations
 
@@ -29,8 +36,15 @@ ACTIVE_STD = 1e-3
 @functools.lru_cache
 def _meta(sub):
     info = json.load(open(ROOT / sub / "meta/info.json"))
-    m = {j["episode_index"]: j for j in map(json.loads, open(ROOT / sub / "meta/episode_instruction_mapping.jsonl"))}
-    return info, m
+    tasks = {j["task_index"]: j["task"] for j in map(json.loads, open(ROOT / sub / "meta/tasks.jsonl"))}
+    m = {}
+    for line_no, j in enumerate(map(json.loads, open(ROOT / sub / "meta/episode_instruction_mapping.jsonl"))):
+        if j["episode_index"] in m:  # release bug: a repeated index belongs to the episode of its line number
+            j = {**j, "mapping_note": f"index {j['episode_index']} repeated at line {line_no}"}
+            m[line_no] = j
+        else:
+            m[j["episode_index"]] = j
+    return info, m, tasks
 
 
 def list_episodes(root: Path = ROOT) -> list[str]:
@@ -40,7 +54,7 @@ def list_episodes(root: Path = ROOT) -> list[str]:
 def load_episode(eid: str, root: Path = ROOT) -> Episode:
     sub, name = eid.split("/")
     idx = int(name.split("_")[-1])
-    info, mp = _meta(sub)
+    info, mp, tasks = _meta(sub)
     ch = idx // info.get("chunks_size", 1000)
     d = pd.read_parquet(root / sub / f"data/chunk-{ch:03d}/{name}.parquet").sort_values("frame_index")
     t = d["timestamp"].to_numpy(float)
@@ -64,7 +78,10 @@ def load_episode(eid: str, root: Path = ROOT) -> Episode:
                            height=480, frame_t=d["frame_index"].to_numpy() / float(info["fps"]), local=vp.exists()))
     streams = {k: Stream(t=t, data=st[:, SL[k]], names=names[SL[k]], units="rad", source="measured_joint")
                for k in ("left_arm", "right_arm", "head", "spine")}
+    task_name = tasks[int(d["task_index"].iloc[0])]
     j = mp.get(idx, {})
+    if j and j["action_name"] != task_name:  # mapping row not aligned with this episode -> no text
+        j = {}
     return Episode(
         dataset_id=DATASET_ID, source_episode_id=eid, trajectory_group_id=f"{DATASET_ID}/{eid}",
         embodiment_id="airbot_play_x2+xhand1_x2", t0_unix=None, duration_s=float(t[-1]),
@@ -72,6 +89,6 @@ def load_episode(eid: str, root: Path = ROOT) -> Episode:
         instruction_original=j.get("instruction"), instruction_en=j.get("instruction"),
         annotation_source="dataset" if j.get("instruction") else "none", annotation_level="task", language="en",
         extra={"subset": sub, "action_id": j.get("action_id"), "action_name": j.get("action_name"),
-               "category": j.get("category"),
-               "text_note": "action_name and instruction are not always consistent in the release (see adapter doc)"},
+               "category": j.get("category"), "mapping_note": j.get("mapping_note"),
+               "text_note": "action_name/task names are unreliable in the release; use the instruction (adapter doc)"},
     )
