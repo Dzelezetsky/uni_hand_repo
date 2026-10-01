@@ -1,13 +1,12 @@
 """Download the Stage-1 datasets into raw_data/ with the layout the UnifiedDex adapters expect.
 
 Hand / state data and metadata of EVERY episode are downloaded (small; needed for canonical geometry and labels);
-RGB only for the primary camera and only for a fraction of the video files (plan for a ~600 GB server):
-  humanoid_everyday_h1  1.0   egocentric                 openarm_banana  1.0   head
-  trex                  1.0   head_left                  dexora          1.0   top
-  egosteer              0.25  head  (every 4th file; files are task-sorted -> all tasks)
-  sharpa_origami        0.5   head_left (every 2nd season)
-Depth, other cameras, wrist views are never downloaded. Already present files are skipped (safe to re-run; raise a
-fraction later to add more video). Needs `hf auth login` with access to the gated repos (Origami, OpenArm Banana).
+RGB only for the primary camera, all video files by default (~505 GB video, plan for a ~1.1 TB server):
+  humanoid_everyday_h1  egocentric      openarm_banana  head      trex            head_left
+  dexora                top             egosteer        head      sharpa_origami  head_left
+A fraction < 1 (--fraction ds=f) keeps every k-th video file (EgoSteer files are task-sorted -> all tasks stay) or
+every k-th group (Origami: season). Depth, other cameras, wrist views are never downloaded. Already present files
+are skipped (safe to re-run). Needs `hf auth login` with access to the gated repos (Origami, OpenArm Banana).
 usage: python stage1/download_data.py [--dry-run] [--only ds1,ds2] [--fraction ds=f ...]
 """
 from __future__ import annotations
@@ -30,9 +29,9 @@ SPEC = {
     "dexora": dict(repo="Dexora/Dexora_Real-World_Dataset", out="raw_data/dexora", fraction=1.0,
                    keep=[r"^airbot_[a-z_]+/meta/", r"^airbot_[a-z_]+/data/", r"^README\.md$"],
                    video=r"^airbot_[a-z_]+/videos/[^/]+/observation\.images\.top/"),
-    "egosteer": dict(repo="EgoSteer/EgoSteer-RealWorld", out="raw_data/egosteer", fraction=0.25,
+    "egosteer": dict(repo="EgoSteer/EgoSteer-RealWorld", out="raw_data/egosteer", fraction=1.0,
                      keep=[r"^meta/", r"^data/", r"^README\.md$"], video=r"^videos/observation\.images\.head/"),
-    "sharpa_origami": dict(repo="SharpaIT/Robotic_Origami_Challenge", out="raw_data/origami", fraction=0.5,
+    "sharpa_origami": dict(repo="SharpaIT/Robotic_Origami_Challenge", out="raw_data/origami", fraction=1.0,
                            keep=[r"^season_[^/]+/lerobot3\.0/meta/", r"^season_[^/]+/lerobot3\.0/data/"],
                            video=r"^season_[^/]+/lerobot3\.0/videos/observation\.images\.head_left/",
                            video_group=r"^(season_[^/]+)/"),

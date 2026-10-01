@@ -4,33 +4,53 @@ Every step below was run locally first (RTX 3060; the full model only in a trunc
 **from the repo root** unless a step says otherwise. After the steps marked **→ send**, paste the requested output
 back into the chat.
 
-Disk plan (~600 GB): video ~262 GB, hand/state data ~30 GB, unified + stage1_data ~55 GB, environments ~20 GB,
-T5-11B 45 GB (temporary, deleted after step 9), training checkpoints ~80 GB (pruned, step 13).
+Container layout (docker run ... -v /home/zelezetsky_dv/mimic/mount:/home/mount
+-v /datasets/zelezetsky_dv:/datasets/zelezetsky_dv -w /home/mount): datasets and everything derived from them go to
+`/datasets/zelezetsky_dv/unidex`, the repo, environments, model weights and training outputs to `/home/mount`.
+
+Disk plan (~1.1 TB available):
+- `/datasets/zelezetsky_dv/unidex`: video ~505 GB (primary camera, all files), hand/state data ~30 GB,
+  unified_server + stage1_data ~55 GB  → ~590 GB;
+- `/home/mount`: environments + uv cache ~40 GB, Cosmos weights ~51 GB (T5-11B 45 GB of it deleted after step 9),
+  training checkpoints ~80 GB per experiment (pruned, step 13; ~240 GB for clean + leaky + off)  → ~300 GB.
 
 ---
 
-## 0. Big-disk layout (once)
+## 0. Container environment (once per container; also after re-creating it)
 
-Put all large, git-ignored directories on the big disk and link them into the repo:
+`/root` is not mounted: caches and the HF token written there are lost with the container and fill the system disk.
+Keep them on the mount:
 
 ```bash
-BIG=/path/to/big/disk/unidex          # <- EDIT
-mkdir -p $BIG/{raw_data,unified_server,stage1_data,stage1_runs,mimic_checkpoints}
+cat >> ~/.bashrc <<'RC'
+export UV_CACHE_DIR=/home/mount/.cache/uv
+export HF_HOME=/home/mount/.cache/huggingface
+export UNIDEX_UNIFIED=/home/mount/uni_hand_repo/unified_server
+export PATH=$HOME/.local/bin:$PATH
+RC
+source ~/.bashrc
+df -h /home/mount /datasets/zelezetsky_dv                                   # ~300 GB / ~600 GB free needed
+touch /datasets/zelezetsky_dv/.w && rm /datasets/zelezetsky_dv/.w && echo writable
 ```
 
-## 1. Code
+## 1. Code and big-directory links (once)
 
 ```bash
-git clone git@github.com:Dzelezetsky/uni_hand_repo.git
+D=/datasets/zelezetsky_dv/unidex
+mkdir -p $D/{raw_data,unified_server,stage1_data} /home/mount/stage1_runs /home/mount/mimic_checkpoints
+cd /home/mount
+git clone https://github.com/Dzelezetsky/uni_hand_repo.git
 cd uni_hand_repo
 git checkout stage1-mimic-video
-ln -s $BIG/raw_data raw_data
-ln -s $BIG/unified_server unified_server
-ln -s $BIG/stage1_data stage1_data
-ln -s $BIG/stage1_runs stage1_runs
-ln -s $BIG/mimic_checkpoints third_party/mimic_video/model/checkpoints
+ln -s $D/raw_data raw_data
+ln -s $D/unified_server unified_server
+ln -s $D/stage1_data stage1_data
+ln -s /home/mount/stage1_runs stage1_runs
+ln -s /home/mount/mimic_checkpoints third_party/mimic_video/model/checkpoints
 ```
 
+All paths in the code and in the Stage-1 index are relative to the repo, so the links are transparent. All commands
+below run from `/home/mount/uni_hand_repo` unless a step says otherwise.
 Later updates: `git pull` (nothing in the tracked tree is modified on the server).
 
 ## 2. UnifiedDex environment (data pipeline)
@@ -40,7 +60,7 @@ curl -LsSf https://astral.sh/uv/install.sh | sh        # if uv is missing
 uv venv --python 3.12 .venv
 uv pip install --python .venv -r requirements-unidex.txt
 .venv/bin/hf auth login                                  # account zelezetsky (gated: Origami, OpenArm Banana)
-export UNIDEX_UNIFIED=$PWD/unified_server                # ALWAYS set this on the server (also in steps 5-6)
+echo $UNIDEX_UNIFIED                                     # must print .../unified_server (set in step 0)
 ```
 
 ## 3. Hand models
@@ -53,7 +73,7 @@ Expected last line: `hand models ready`.
 ## 4. Datasets (hours; can run in the background)
 
 ```bash
-.venv/bin/python stage1/download_data.py --dry-run       # prints sizes, expect TOTAL data+meta ~30 GB, video ~262 GB
+.venv/bin/python stage1/download_data.py --dry-run       # prints sizes, expect TOTAL data+meta ~30 GB, video ~505 GB
 nohup .venv/bin/python stage1/download_data.py > raw_data/download.log 2>&1 &
 grep -E "done|TOTAL|Error" raw_data/download.log         # progress; re-run the same command after any network error
 ```
@@ -78,8 +98,8 @@ sharpa_origami 21,572,208 · trex 10,946,918 (±0; any difference means differen
 export UNIDEX_UNIFIED=$PWD/unified_server
 .venv/bin/python stage1/build_data.py humanoid_everyday_h1 openarm_banana trex dexora egosteer sharpa_origami
 ```
-Expected: episodes written ≈ H1 4,882 · Banana 1,072 · T-Rex 5,464 · Dexora ~11,500 · EgoSteer ~13,600
-(25 % of the video files) · Origami ~900 (50 % of the seasons); `skipped` = episodes without downloaded video.
+Expected: episodes written ≈ H1 4,882 · Banana 1,072 · T-Rex 5,464 · Dexora ~11,500 · EgoSteer ~54,400
+· Origami ~1,800; `skipped` = episodes without downloaded video.
 **→ send** the output.
 
 ## 7. mimic-video environment
