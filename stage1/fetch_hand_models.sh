@@ -31,9 +31,12 @@ $PY scripts/models/mjcf_to_urdf_ruiyan.py                     # -> egosteer_ruiy
 
 # Inspire RH56F1 (HRDexDB authors' URDF + meshes; also used for OpenArm Banana)
 $PY - <<'PY'
-from huggingface_hub import snapshot_download
-snapshot_download("HRDexDB/HRDexDB", repo_type="dataset", allow_patterns=["assets/robots/*", "assets/robots/**"],
-                  local_dir="raw_data/hrdexdb")
-print("raw_data/hrdexdb/assets/robots ok")
+from huggingface_hub import HfApi, hf_hub_download
+# list only assets/robots: snapshot_download(allow_patterns=...) walks the whole (huge) repo tree first and hangs
+files = [f.path for f in HfApi().list_repo_tree("HRDexDB/HRDexDB", repo_type="dataset", path_in_repo="assets/robots",
+                                                recursive=True) if hasattr(f, "size")]
+for p in files:
+    hf_hub_download("HRDexDB/HRDexDB", p, repo_type="dataset", local_dir="raw_data/hrdexdb")
+print(f"raw_data/hrdexdb/assets/robots ok ({len(files)} files)")
 PY
 echo "hand models ready"
