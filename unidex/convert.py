@@ -187,13 +187,20 @@ def convert_episode(e: S.Episode, out: Path = OUT) -> tuple[dict, list[dict], li
 def hand_models_table() -> pd.DataFrame:
     rows = []
     for hid, spec in registry()["hand_models"].items():
+        if not (REPO / spec["urdf"]).exists():  # not fetched on this machine (e.g. server: Stage-1 hands only)
+            rows.append(dict(hand_model_id=hid, family=spec["family"], side=spec["side"],
+                             model_status=spec["model_status"], model_source=spec["model_source"], urdf=spec["urdf"],
+                             model_files_present=False, validation_status=_validation_status(hid)[0],
+                             validation_evidence=_validation_status(hid)[1]))
+            continue
         h = load_hand(hid)
         rows.append(dict(hand_model_id=hid, family=spec["family"], side=spec["side"],
                          model_status=spec["model_status"], model_source=spec["model_source"], urdf=spec["urdf"],
                          hand_model_version=_sha(REPO / spec["urdf"]), palm_link=spec["palm_link"],
                          palm_scale_m=h.frame.scale, palm_R=json.dumps(h.frame.R.tolist()),
                          palm_origin=json.dumps(h.frame.origin.tolist()),
-                         tip_links=json.dumps(h.tip_links), validation_status=_validation_status(hid)[0],
+                         tip_links=json.dumps(h.tip_links), model_files_present=True,
+                         validation_status=_validation_status(hid)[0],
                          validation_evidence=_validation_status(hid)[1]))
     for fam, m in registry().get("missing_models", {}).items():
         rows.append(dict(hand_model_id=None, family=fam, model_status="missing_exact_model",
