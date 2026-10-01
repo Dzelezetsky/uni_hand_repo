@@ -105,7 +105,8 @@ def build(datasets, out: Path):
                 missing_video += 1
                 continue
             hands = {r.side: {"path": r.path, "hand_model_id": r.hand_model_id} for r in g.itertuples()}
-            text = man.loc[(ds, ep), "instruction_en"] or ""
+            text = man.loc[(ds, ep), "instruction_en"]
+            text = text if isinstance(text, str) else ""  # no annotation (NaN/None) -> empty prompt
             instr[sha(text)] = text
             f = out / "episodes" / ds / f"{ep.replace('/', '__')}.safetensors"
             meta[ep] = dict(file=str(f.relative_to(out)), rgb_ref=str(video.relative_to(REPO)), fps=float(cr.fps),
