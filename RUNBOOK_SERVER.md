@@ -6,30 +6,34 @@ back into the chat.
 
 Container layout (docker run ... -v /home/zelezetsky_dv/mimic/mount:/home/mount
 -v /datasets/zelezetsky_dv:/datasets/zelezetsky_dv -w /home/mount): datasets and everything derived from them go to
-`/datasets/zelezetsky_dv/unidex`, the repo, environments, model weights and training outputs to `/home/mount`.
+`/datasets/zelezetsky_dv/unidex`, and so do model weights, training outputs and download caches (`/datasets` is
+mounted on every server: moving to another server needs no copying, a run resumes from its checkpoints there).
+Only the repo with its two environments lives in `/home/mount`.
 
 Disk plan (~1.1 TB available):
 - `/datasets/zelezetsky_dv/unidex`: video ~505 GB (primary camera, all files), hand/state data ~30 GB,
-  unified_server + stage1_data ~55 GB  → ~590 GB;
-- `/home/mount`: environments + uv cache ~40 GB, Cosmos weights ~51 GB (T5-11B 45 GB of it deleted after step 9),
-  training checkpoints ~80 GB per experiment (pruned, step 13; ~240 GB for clean + leaky + off)  → ~300 GB.
+  unified_server + stage1_data ~55 GB, Cosmos weights ~51 GB (T5-11B 45 GB of it deleted after step 9), training
+  checkpoints ~80 GB per experiment (pruned, step 13; ~240 GB for clean + leaky + off), uv/HF caches ~20 GB
+  → ~900 GB;
+- `/home/mount`: repo + two environments ~30 GB.
 
 ---
 
 ## 0. Container environment (once per container; also after re-creating it)
 
 `/root` is not mounted: caches and the HF token written there are lost with the container and fill the system disk.
-Keep them on the mount:
+Keep them on `/datasets` (shared by all servers):
 
 ```bash
 cat >> ~/.bashrc <<'RC'
-export UV_CACHE_DIR=/home/mount/.cache/uv
-export HF_HOME=/home/mount/.cache/huggingface
+export UV_CACHE_DIR=/datasets/zelezetsky_dv/unidex/cache/uv
+export UV_LINK_MODE=copy
+export HF_HOME=/datasets/zelezetsky_dv/unidex/cache/huggingface
 export UNIDEX_UNIFIED=/home/mount/uni_hand_repo/unified_server
 export PATH=$HOME/.local/bin:$PATH
 RC
 source ~/.bashrc
-df -h /home/mount /datasets/zelezetsky_dv                                   # ~300 GB / ~600 GB free needed
+df -h /home/mount /datasets/zelezetsky_dv                                   # ~30 GB / ~900 GB free needed
 touch /datasets/zelezetsky_dv/.w && rm /datasets/zelezetsky_dv/.w && echo writable
 ```
 
@@ -37,7 +41,7 @@ touch /datasets/zelezetsky_dv/.w && rm /datasets/zelezetsky_dv/.w && echo writab
 
 ```bash
 D=/datasets/zelezetsky_dv/unidex
-mkdir -p $D/{raw_data,unified_server,stage1_data} /home/mount/stage1_runs /home/mount/mimic_checkpoints
+mkdir -p $D/{raw_data,unified_server,stage1_data,stage1_runs,mimic_checkpoints,cache}
 cd /home/mount
 git clone https://github.com/Dzelezetsky/uni_hand_repo.git
 cd uni_hand_repo
@@ -45,13 +49,17 @@ git checkout stage1-mimic-video
 ln -s $D/raw_data raw_data
 ln -s $D/unified_server unified_server
 ln -s $D/stage1_data stage1_data
-ln -s /home/mount/stage1_runs stage1_runs
-ln -s /home/mount/mimic_checkpoints third_party/mimic_video/model/checkpoints
+ln -s $D/stage1_runs stage1_runs
+ln -s $D/mimic_checkpoints third_party/mimic_video/model/checkpoints
 ```
 
 All paths in the code and in the Stage-1 index are relative to the repo, so the links are transparent. All commands
 below run from `/home/mount/uni_hand_repo` unless a step says otherwise.
 Later updates: `git pull` (nothing in the tracked tree is modified on the server).
+
+**Another server** (same `/datasets`): step 0, the clone + links of step 1 (without `mkdir`), steps 2 and 7
+(environments are rebuilt from the shared uv cache), then go straight to step 12 — data, weights, T5 embeddings and
+checkpoints are already there; the same `job.name` resumes.
 
 ## 2. UnifiedDex environment (data pipeline)
 
